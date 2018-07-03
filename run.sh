@@ -1,0 +1,5 @@
+export PYTHONPATH="/opt/qgis/QGIS/build/output/python/:/home/inbal/inbal/epif_ml/:/home/inbal/inbal/python_texturerecog/:/opt/intel/lib/intel64/:/opt/intel/compilers_and_libraries_2018.0.128/linux/ipp/lib/intel64_lin/:/opt/intel/compilers_and_libraries_2018.0.128/linux/mkl/lib/intel64_lin/:/opt/opencv/lib64/:/usr/local/cuda-9.1/lib64/:/opt/intel/compilers_and_libraries_2018.0.128/linux/daal/lib/intel64_lin/:/opt/intel/compilers_and_libraries_2018.0.128/linux/tbb/lib/intel64_lin/gcc4.1/"
+export LD_LIBRARY_PATH="/opt/qgis/QGIS/build/output/lib/:/home/inbal/inbal/epif_ml/:/opt/intel/lib/intel64/:/opt/intel/compilers_and_libraries_2018.0.128/linux/ipp/lib/intel64_lin/:/opt/intel/compilers_and_libraries_2018.0.128/linux/mkl/lib/intel64_lin/:/opt/opencv/lib64/:/usr/local/cuda-9.1/lib64/:/opt/intel/compilers_and_libraries_2018.0.128/linux/daal/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.0.128/linux/tbb/lib/intel64_lin/gcc4.1/"
+export QGIS_PREFIX="/opt/qgis/QGIS/build/output/"
+python3 object_classifier.py
+
