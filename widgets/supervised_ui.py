@@ -303,8 +303,8 @@ class supervised_classification_ui(QWidget):
             print(line.rstrip().replace('#open input', openinput))
 
         cmd = 'python' + input['outpath'] + 'supervised_classification.py'
-
-        self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
+        #self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
+        self.process.cmd = cmd
         self.process.start_process()
 
 

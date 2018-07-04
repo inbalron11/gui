@@ -1,15 +1,13 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QFileDialog, QApplication, QHBoxLayout,QLabel,\
-    QDialogButtonBox,QGroupBox, QToolButton, QMenuBar, QWidget, QStackedWidget, QDockWidget, QAction,\
-    QGraphicsView, QTreeWidgetItem, QFrame, QTextEdit
-
-import os
+from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QApplication,\
+     QMenuBar, QStackedWidget, QDockWidget, QAction,\
+    QGraphicsView, QFrame
 
 from qgis.core import *
 from qgis.gui import *
 import sys
-import functools
+
 
 # Import our GUI
 sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets')
@@ -18,12 +16,6 @@ from costum_widgets import map_canvas, LayersPanel,tree
 from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
-import ast
-import subprocess
-import gdal
-
-
-
 
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
@@ -43,7 +35,7 @@ class object_classifier_app (QMainWindow):
         self.height = 750
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        #self.showFullScreen()
+
 
         self.canvasframe = QFrame()
         self.canvasframe.setFrameShape(QFrame.StyledPanel)
@@ -132,7 +124,6 @@ class object_classifier_app (QMainWindow):
         self.StackedWidget = QStackedWidget()
         self.StackedWidget.addWidget(self.supervised_classification.step1)
         self.StackedWidget.addWidget(self.supervised_classification.step2)
-        #self.StackedWidget.addWidget(self.supervised_classification.onrungroup)
         self.StackedWidget.setCurrentWidget(self.supervised_classification.step1)
         self.StackedWidget_dock = QDockWidget('classification',self)
         self.StackedWidget_dock.setWidget(self.StackedWidget)
@@ -174,8 +165,6 @@ class object_classifier_app (QMainWindow):
         self.supervised.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
         self.supervised_classification.step1next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
         self.supervised_classification.step2back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
-        #self.supervised_classification.running.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.onrungroup))
-
 
 
     def zoomIn(self):
