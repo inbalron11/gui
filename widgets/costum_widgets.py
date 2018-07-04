@@ -11,11 +11,8 @@ import gdal
 import os
 import ast
 
-
-
-
 class MyMenuProvider(QgsLayerTreeViewMenuProvider):
-
+    
   def __init__(self, view):
     super().__init__()
     """this class creates a menue for controling the layers in the layerspanel. 
@@ -64,13 +61,13 @@ class MyMenuProvider(QgsLayerTreeViewMenuProvider):
 
 
 class LayersPanel(QgsLayerTreeView):
-
     layerdeletion = pyqtSignal(str, name='layerdeletion')
     dropped = pyqtSignal(list, name='dropped')
-
+    
     def __init__(self, linkedcanvas):
         super().__init__()
-        """This class creates a layers panel object, connected to a map canvas (linked canvas)"""
+        """This class creates a layers panel widget, connected to a map canvas (linked canvas)"""
+        
         self.linkedcanvas = linkedcanvas
         self.project = QgsProject.instance()
         self.root = self.project.layerTreeRoot()
@@ -82,20 +79,21 @@ class LayersPanel(QgsLayerTreeView):
         self.model.setFlag(QgsLayerTreeModel.AllowNodeChangeVisibility)
         self.model.setFlag(QgsLayerTreeModel.ShowLegend)
         self.model.setFlag(QgsLayerTreeModel.ShowLegendAsTree)
-
         provider = MyMenuProvider(self)
         self.setMenuProvider(provider)
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         self.setDragDropMode(QAbstractItemView.DragDrop)
+        
+        # connect signals and slots
         self.dropped.connect(self.add_to_canvas)
         self.linkedcanvas.droppedtocanvas.connect(self.add_to_canvas)
         self.layerdeletion.connect(self.removelayer)
         self.currentLayerChanged.connect(lambda: self.linkedcanvas.refreshAllLayers())
 
     def keyPressEvent(self, event):
-        """when 'delet' is pressed a signal for deleting the current layer from the layers panel is emmited"""
+        """when 'delet' key is pressed a signal for deleting the current layer from the layers panel is emmited"""
         if event.key() == Qt.Key_Delete:
             if self.currentLayer():
                 currentlayer = self.currentLayer()
@@ -104,7 +102,7 @@ class LayersPanel(QgsLayerTreeView):
                 pass
 
     def removelayer(self,layerid):
-        """"the current layer will be deleted"""
+        """"the current layer will be deleted when layerdeletion signal is emmited"""
         self.project.removeMapLayer(layerid)
         self.linkedcanvas.refreshAllLayers()
 
