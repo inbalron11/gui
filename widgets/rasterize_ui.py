@@ -1,25 +1,10 @@
-from PyQt5.QtGui import QFont, QStandardItemModel, QDropEvent, QStandardItem
-from PyQt5.QtCore import Qt, pyqtSignal, QFileInfo
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QGroupBox,\
-    QPushButton, QLineEdit, QWidget, QFrame, QLabel, QListWidget, QApplication, QFileSystemModel,QTreeView,\
-    QListView, QListWidgetItem, QAbstractItemView, QMenuBar, QAction, QMenu, QCheckBox, QListWidgetItem, QMessageBox,\
-    QCheckBox, QTreeWidget, QTreeWidgetItem, QGraphicsView, QFileDialog
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget
 import sys
 from qgis.core import *
 from qgis.gui import *
-import gdal
-import os
-import ast
-import subprocess
-import threading as thr
-
-from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, listview, lineedit
-
-
-
+from costum_widgets import map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit
 
 sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets/tools')
-
 from rasterize import Rasterize
 
 

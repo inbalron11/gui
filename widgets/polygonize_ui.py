@@ -13,7 +13,7 @@ import ast
 import subprocess
 import threading as thr
 
-from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, listview, lineedit
+from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit
 import fileinput
 
 

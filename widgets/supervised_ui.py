@@ -13,27 +13,24 @@ import ast
 import subprocess
 import threading as thr
 
-from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, listview, lineedit
+from costum_widgets import map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit, MyQProcess
 import fileinput
-
-
-
-
 
 
 class supervised_classification_ui(QWidget):
     running = pyqtSignal(name='running')
+
     def __init__(self):
         super().__init__()
-        # input datalayout variables
+        """init a widget for supervised classification"""
 
+        #step1- chosing dataset and bands, step 2- chosing trainingset,roi,classname,params,outpath
         self.step1 = QGroupBox()
         self.step2 = QGroupBox()
-
         self.lstwidget_dataset = datatreeview()
         self.featurebandwidget = bands_pairing(self.lstwidget_dataset)
-        self.lstwidget_trainingset = listview()
-        self.lstwidget_roi = listview()
+        self.lstwidget_trainingset = inputlistwidget()
+        self.lstwidget_roi = inputlistwidget()
         self.lineEdit_out = lineedit()
         self.lineEdit_classname = QLineEdit()
         self.cellsizelabel = QLabel('Cell Size')
@@ -55,7 +52,6 @@ class supervised_classification_ui(QWidget):
         self.dataset.setTitle("Data set")
         datasetlayout = QVBoxLayout()
         datasetlayout.addWidget(self.lstwidget_dataset)
-        #self.lstwidget_dataset.dropped.connect(self.set_fixed_bands)
         self.dataset.setLayout(datasetlayout)
 
         # group2
@@ -71,7 +67,6 @@ class supervised_classification_ui(QWidget):
         roilayout = QVBoxLayout()
         roilayout.addWidget(self.lstwidget_roi)
         self.roi.setLayout(roilayout)
-
 
         # group4
         self.outputpath = QGroupBox()
@@ -97,7 +92,6 @@ class supervised_classification_ui(QWidget):
 
         featurebandslayout = QVBoxLayout()
         featurebandslayout.addWidget(self.featurebandwidget.maingroup)
-
         self.featurebands.setLayout(featurebandslayout)
 
         # group 10
@@ -126,27 +120,23 @@ class supervised_classification_ui(QWidget):
         paramslayout.addWidget(self.objectresolutionlabel, 2, 4)
         paramslayout.addWidget(self.objectresolutionlineedit, 2, 5)
 
-        #self.onrungroup = QGroupBox()
+        # Qprocess to run the classification
         self.process = MyQProcess()
-        #self.onrungroup.setLayout(self.process.layout)
-
+        # creates step1 and step2 ui
         self.createstep1()
         self.createstep2()
 
-
+        #connect signals and slots
         self.step2saveroject.clicked.connect(self.create_project)
         self.step1open.clicked.connect(self.load_supervised_project)
-        #self.step2classify.clicked.connect(self.setworker)
         self.step2classify.clicked.connect(self.run_supervised_classification)
 
-
-        #self.process = MyQProcess(self.classify,self.stdout)
-
-
     def runclass(self):
+        """emits a signal when the classification is runing"""
         self.running.emit()
 
     def createstep1(self):
+        """create the ui for step 1- selecting datasets and bands"""
         step1grouplayout = QVBoxLayout()
         self.step1.setLayout(step1grouplayout)
         self.button_box_nextback = QDialogButtonBox()
@@ -157,8 +147,8 @@ class supervised_classification_ui(QWidget):
         step1grouplayout.addWidget(self.button_box_nextback)
         return
 
-
     def createstep2(self):
+        """create the ui for step 1- selecting training,roi,params.outpath"""
         step2grouplayout = QVBoxLayout()
         self.step2.setLayout(step2grouplayout)
         self.button_box_nextback = QDialogButtonBox()
@@ -173,8 +163,8 @@ class supervised_classification_ui(QWidget):
         step2grouplayout.addWidget(self.button_box_nextback)
         return
 
-
     def set_fixed_bands(self):
+        """get the selcted bands from the datasetsselection widget and set them in the feature bands widget"""
         if self.featurebands.isChecked():
             self.featurebandwidget.firstband.clear()
             self.featurebandwidget.secondband.clear()
@@ -185,6 +175,7 @@ class supervised_classification_ui(QWidget):
             self.featurebandwidget.pairs.clear()
 
     def clear_all_data(self):
+        """clear the data from all the widgets"""
         self.lstwidget_dataset.clear()
         self.featurebandwidget.firstband.clear()
         self.featurebandwidget.secondband.clear()
@@ -200,21 +191,21 @@ class supervised_classification_ui(QWidget):
         self.overlapratiolineedit.clear()
         self.objectresolutionlineedit.clear()
 
-
     def create_project(self):
+        """create a project in a textfile when the user press save project"""
+        folderename = QFileDialog.getExistingDirectory(None, "Select Folder")
+        selectedpath = str(folderename) + '/'
         input = self.supervised_classification_input()
         strinput = str(input)
 
-        if input['outpath'] is not None:
-            print('creatingproject')
-            # create and save project:
-
-            os.system("touch" + " " + input['outpath'] + "supervisedclassificationproject.txt")
-            file = open(input['outpath'] + 'supervisedclassificationproject.txt', 'w')
-            file.write(strinput)
-            file.close()
+        # create and save project:
+        os.system("touch" + " " + selectedpath + "supervisedclassificationproject.txt")
+        file = open(input['outpath'] + 'supervisedclassificationproject.txt', 'w')
+        file.write(strinput)
+        file.close()
 
     def supervised_classification_input(self):
+        """get the users input fron all the widgets"""
         dataset = self.lstwidget_dataset.collect_user_input()['datasets']
         bands = self.featurebandwidget.get_pairs()[0]
         featurebands = self.featurebandwidget.get_pairs()[1]
@@ -231,17 +222,18 @@ class supervised_classification_ui(QWidget):
         datasetwidget = self.lstwidget_dataset.collect_user_input()['bandsdict']
         feturebandspairs = self.featurebandwidget.get_pairs()[2]
 
-        self.inputdict = {'dataset': dataset, 'bands': bands, 'featurebands': featurebands, 'trainingset': trainingset,
+        inputdict = {'dataset': dataset, 'bands': bands, 'featurebands': featurebands, 'trainingset': trainingset,
                       'roi': roi, 'outpath': outpath, 'classname': classname, 'mincellsize': float(mincellsize),
                       'maxcellsize': float(maxcellsize), 'minocurencedistance': float(minocurencedistance),
                       'maxocurencedistance': float(maxocurencedistance),
                       'ovelrlapratio': float(ovelrlapratio), 'objectresolution': float(objectresolution),
                       'datasetwidget': datasetwidget, 'feturebandspairs': feturebandspairs}
 
-        return self.inputdict
+        return inputdict
 
 
     def load_supervised_project(self):
+        """load a project and set its data into the widgets"""
         self.clear_all_data()
         file = QFileDialog.getOpenFileName(self, "Open project", ".", "(*.txt)")[0]
         fileinfo = QFileInfo(file)
@@ -289,12 +281,13 @@ class supervised_classification_ui(QWidget):
         self.objectresolutionlineedit.setText(str(objectresolution))
 
     def run_supervised_classification(self):
+        """run the classification when 'classify' bottun is pressed"""
         self.running.emit()
         input = self.supervised_classification_input()
         strinput = str(input)
 
         # create the classification script with the users input
-        copyclassificationscript = "cp " + "'/home/inbal/inbal/qgis_programing/standaloneapp/epif_clssification_app_ver_2/supervised_classification.py' " \
+        copyclassificationscript = "cp " + "'/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/supervised_classification.py' " \
                                    + "'" + input['outpath'] + "'"
         os.system(copyclassificationscript)
         openinput = "input_dict =" + strinput
@@ -302,83 +295,10 @@ class supervised_classification_ui(QWidget):
         for line in fileinput.input(input['outpath'] + 'supervised_classification.py', inplace=True):
             print(line.rstrip().replace('#open input', openinput))
 
-        cmd = 'python' + input['outpath'] + 'supervised_classification.py'
+        cmd = 'python3 ' + input['outpath'] + 'supervised_classification.py'
+        print (cmd)
         #self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
         self.process.cmd = cmd
         self.process.start_process()
-
-
-
-
-class MyQProcess(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Add the UI components (here we use a QTextEdit to display the stdout from the process)
-        self.layout = QVBoxLayout()
-        self.stoppush = QPushButton('Stop')
-        self.edit = QLabel()
-        self.edit.setStyleSheet('font-size:12pt')
-        self.layout.addWidget(self.edit)
-        self.layout.addWidget(self.stoppush)
-        self.setLayout(self.layout)
-        self.cmd = None
-        self.setGeometry(100,100, 800, 300)
-        self.setWindowTitle('Running classification...')
-        self.edit.setText('Start classification...')
-        #self.show()
-
-        # Add the process and start it
-        self.process = QProcess()
-        self.setupProcess()
-
-        self.stoppush.clicked.connect(self.kill)
-
-    def setupProcess(self):
-        # Set the channels
-        self.process.setProcessChannelMode(QProcess.MergedChannels)
-        # Connect the signal readyReadStandardOutput to the slot of the widget
-        self.process.readyReadStandardOutput.connect(self.readStdOutput)
-        # Run the process with a given command
-
-    def start_process(self):
-        # Show the widget
-        self.show()
-        # print('starting process')
-        self.process.start(self.cmd)
-        # print('started')
-
-    def __del__(self):
-        # If QApplication is closed attempt to kill the process
-        self.process.terminate()
-        # Wait for Xms and then elevate the situation to terminate
-        if not self.process.waitForFinished(10000):
-            print('killing process')
-            self.process.kill()
-
-    def kill(self):
-        print('killing process')
-        self.process.kill()
-
-
-    def readStdOutput(self):
-        # Every time the process has something to output we attach it to the QTextEdit
-        self.edit.setText(str(self.process.readAllStandardOutput()))
-
-    def main():
-        app = QApplication(sys.argv)
-        w = MyQProcess()
-
-        return app.exec_()
-
-
-
-
-
-
-
-
-
-
 
 

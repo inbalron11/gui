@@ -16,13 +16,9 @@ Created on Tue Oct  4 13:09:33 2016
 
 import sys
 import numpy as np
-import ast
-print('hello')
 # import os
 __linux__o = True
 epif = True
-import os
-
 
 if not __linux__o:
     sys.path.append('/dvlp/misc/texturerecog_vs12/python_texturerecog/geosml')
@@ -128,7 +124,3 @@ objectClassifier.process(bands, featureBands, outPath=outPath, bandNormalization
 
 objectClassifier.computePerfMeasures(False)
 # objectClassifier.computePerfMeasures(True)
-
-
-
-print('here')

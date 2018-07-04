@@ -1,18 +1,18 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QApplication,\
-     QMenuBar, QStackedWidget, QDockWidget, QAction,\
-    QGraphicsView, QFrame
+from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QFileDialog, QApplication, QHBoxLayout,QLabel,\
+    QDialogButtonBox,QGroupBox, QToolButton, QMenuBar, QWidget, QStackedWidget, QDockWidget, QAction,\
+    QGraphicsView, QTreeWidgetItem, QFrame, QTextEdit
 
 from qgis.core import *
 from qgis.gui import *
 import sys
 
 
-# Import our GUI
+# Import costume widgets
 sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets')
 
-from costum_widgets import map_canvas, LayersPanel,tree
+from costum_widgets import map_canvas, LayersPanel,filetree
 from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
@@ -21,12 +21,11 @@ from rasterize_ui import Rasterize_ui
 # before running the application
 qgis_prefix = '/opt/qgis/QGIS/build/output/'
 
-
 class object_classifier_app (QMainWindow):
     def __init__(self):
         super().__init__()
-
-        # initialize the main window
+        
+        # init the main window
         self.title = 'Epif Object Classifier'
         self.setWindowTitle(self.title)
         self.left = 10
@@ -36,14 +35,61 @@ class object_classifier_app (QMainWindow):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-
+        # Create the map canvas and set the canvas to be the main widget
         self.canvasframe = QFrame()
         self.canvasframe.setFrameShape(QFrame.StyledPanel)
         self.canvasframe.setFrameShadow(QFrame.Raised)
+        self.setCentralWidget(self.canvasframe)
+        self.canvas = map_canvas()
+        self.canvas.show()
+        self.framelayout = QVBoxLayout(self.canvasframe)
+        self.framelayout.addWidget(self.canvas)
+        
+        # create map canvas actions and set icons
+        actionZoomIn = QAction("Zoom in", self)
+        actionZoomOut = QAction("Zoom out", self)
+        actionPan = QAction("Pan", self)
+        actionZoomIn.setCheckable(True)
+        actionZoomOut.setCheckable(True)
+        actionPan.setCheckable(True)
 
-        self.treewidget = tree()
+        actionPanPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Hands-Hand-icon.png')
+        actionZoomInPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-In-icon.png')
+        actionZoomOutPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-Out-icon.png')
 
+        actionZoomIn.setIcon(QIcon(actionZoomInPixmap))
+        actionZoomOut.setIcon(QIcon(actionZoomOutPixmap))
+        actionPan.setIcon(QIcon(actionPanPixmap))
+        
+        actionZoomIn.triggered.connect(self.zoomIn)
+        actionZoomOut.triggered.connect(self.zoomOut)
+        actionPan.triggered.connect(self.pan)
+        
+          # create map canvas tool bar
+        self.toolbar = self.addToolBar("Canvas actions")
+        self.toolbar.addAction(actionZoomIn)
+        self.toolbar.addAction(actionZoomOut)
+        self.toolbar.addAction(actionPan)
+
+        # create the map tools
+        self.toolPan = QgsMapToolPan(self.canvas)
+        self.toolPan.setAction(actionPan)
+        self.toolZoomIn = QgsMapToolZoom(self.canvas, False)  # false = in
+        self.toolZoomIn.setAction(actionZoomIn)
+        self.toolZoomOut = QgsMapToolZoom(self.canvas, True)  # true = out
+        self.toolZoomOut.setAction(actionZoomOut)
+
+
+        #init the file tree widget and set as a dock widget
+        self.treewidget = filetree()
+        self.tree = QDockWidget("Select Data", self)
+        self.tree.setWidget(self.treewidget)
+        self.tree.setFloating(False)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.tree)
+        
+        # init a menue bar and its actions
         self.menuebar = QMenuBar()
+        self.setMenuBar(self.menuebar)
         filemenue = self.menuebar.addMenu('File')
         classificationmenue = self.menuebar.addMenu('Classification')
         toolsmenue = self.menuebar.addMenu('Tools')
@@ -59,58 +105,8 @@ class object_classifier_app (QMainWindow):
         toolsmenue.addAction(self.rasterize)
         toolsmenue.addAction(self.confusiomatrix)
         filemenue.addAction(self.loadproject)
-
-
-
-        #set the canvas to be the main widget
-        self.setCentralWidget(self.canvasframe)
-
-
-        # Create the map canvas
-        self.canvas = map_canvas()
-        self.canvas.show()
-        actionZoomIn = QAction("Zoom in", self)
-        actionZoomOut = QAction("Zoom out", self)
-        actionPan = QAction("Pan", self)
-        actionZoomIn.setCheckable(True)
-        actionZoomOut.setCheckable(True)
-        actionPan.setCheckable(True)
-
-        actionPanPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Hands-Hand-icon.png')
-        actionZoomInPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-In-icon.png')
-        actionZoomOutPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-Out-icon.png')
-
-        actionZoomIn.setIcon(QIcon(actionZoomInPixmap))
-        actionZoomOut.setIcon(QIcon(actionZoomOutPixmap))
-        actionPan.setIcon(QIcon(actionPanPixmap))
-
-
-        actionZoomIn.triggered.connect(self.zoomIn)
-        actionZoomOut.triggered.connect(self.zoomOut)
-        actionPan.triggered.connect(self.pan)
-
-        self.toolbar = self.addToolBar("Canvas actions")
-        self.toolbar.addAction(actionZoomIn)
-        self.toolbar.addAction(actionZoomOut)
-        self.toolbar.addAction(actionPan)
-
-        # create the map tools
-        self.toolPan = QgsMapToolPan(self.canvas)
-        self.toolPan.setAction(actionPan)
-        self.toolZoomIn = QgsMapToolZoom(self.canvas, False)  # false = in
-        self.toolZoomIn.setAction(actionZoomIn)
-        self.toolZoomOut = QgsMapToolZoom(self.canvas, True)  # true = out
-        self.toolZoomOut.setAction(actionZoomOut)
-
-
-
-
-
-        # Lay the canvas out in the main window using a vertical box layout
-        self.framelayout = QVBoxLayout(self.canvasframe)
-        self.framelayout.addWidget(self.canvas)
-
-        # createlayerpanel
+       
+        # create a layerpanel
         self.layerpanel = LayersPanel(self.canvas)
         self.layerpanelDock = QDockWidget("Layers", self)
         self.layerpanelDock.setObjectName("layers")
@@ -135,28 +131,16 @@ class object_classifier_app (QMainWindow):
         polygonizewidget = Polygonize_ui()
         polygonizewidget.legendwidget = self.layerpanel
         self.StackedWidget.addWidget(polygonizewidget)
-
+        
+        # set rasterize widget
         rastrizewidget = Rasterize_ui()
         rastrizewidget.legendwidget = self.layerpanel
         rastrizewidget.legendwidget = self.layerpanel
         self.StackedWidget.addWidget(rastrizewidget)
 
-
-
-        # set the tree dockwidget
-        self.tree = QDockWidget("Select Data", self)
-        self.tree.setWidget(self.treewidget)
-        self.tree.setFloating(False)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.tree)
-
-        # set a menue bar
-        self.setMenuBar(self.menuebar)
-
-
         self.threadpool = QThreadPool()
 
-
-
+        # connect signals and slots
         self.poligonize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(polygonizewidget))
         self.poligonize.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Polygonize'))
         self.rasterize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(rastrizewidget))
@@ -167,20 +151,26 @@ class object_classifier_app (QMainWindow):
         self.supervised_classification.step2back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
 
 
+
+
+
     def zoomIn(self):
+        """canvas zoom in tool"""
         self.canvas.setDragMode(QGraphicsView.ScrollHandDrag)
 
     def zoomOut(self):
+        """canvas zoom out tool"""
         self.canvas.setMapTool(self.toolZoomOut)
 
     def pan(self):
+        """canvas pan tool"""
         self.canvas.setMapTool(self.toolPan)
 
 
     def main(argv):
+        """runing thr appplication"""
         # create Qt application
         app = QApplication(argv)
-
 
         # Initialize qgis libraries
         QgsApplication.setPrefixPath(qgis_prefix, True)
@@ -194,7 +184,6 @@ class object_classifier_app (QMainWindow):
 
         # run!
         retval = app.exec_()
-
 
         # exit
         QgsApplication.exitQgis()
