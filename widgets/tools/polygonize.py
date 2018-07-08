@@ -27,15 +27,18 @@ class Polygonize:
                     gdal.GDT_CFloat32: ogr.OFTReal, gdal.GDT_CFloat64: ogr.OFTReal}
     shp_driver = ogr.GetDriverByName('ESRI Shapefile')
 
-    def __init__(self, raster_path, labels_path, shapefile_path, layer_name='thematic', class_name='class',
+    def __init__(self, raster_path, shapefile_path, labels_path = None,labels_list = None , layer_name='thematic', class_name='class',
                  idfield='id'):
 
         self.rasterpath = raster_path
         self.class_name = class_name
         self.output_shp = shapefile_path
         self.layer_name = layer_name
-        self.open_labeles = open(labels_path)
+        self.labels_path= labels_path
+        if labels_path is not None:
+            self.open_labeles = open(labels_path)
         self.id = idfield
+        self.labels_list = labels_list
         # get raster data source
         self.src_raster = gdal.Open(self.rasterpath)
         self.input_band = self.src_raster.GetRasterBand(1)
@@ -54,10 +57,17 @@ class Polygonize:
     def create_lables_dict(self):
         """creation of a dictionary for mapping between lables and pixel values"""
         labelsdict = {}
-        reader = csv.reader(self.open_labeles, delimiter='\n')
         lables_lst = []
-        for line in reader:
-            lables_lst += line
+        if self.labels_path is not None:
+            reader = csv.reader(self.open_labeles, delimiter='\n')
+            for line in reader:
+                lables_lst += line
+        elif self.labels_list is not None:
+            lables_lst = self.labels_list
+
+        else:
+            print("labels where not defined")
+
         key = 0
         for i in range(len(lables_lst)):
             key += 1

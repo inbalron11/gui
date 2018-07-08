@@ -480,7 +480,7 @@ class filetree(QTreeView):
 
 class MyQProcess(QWidget):
     """creates a q process for running the classification"""
-    def __init__(self):
+    def __init__(self,text,title):
         super().__init__()
 
         # Add the UI components (here we use a QTextEdit to display the stdout from the process)
@@ -495,8 +495,8 @@ class MyQProcess(QWidget):
         self.setGeometry(100,100, 800, 300)
         self.setMaximumHeight(300)
         self.setMaximumWidth(800)
-        self.setWindowTitle('Running classification...')
-        self.edit.setText('Start classification...')
+        self.setWindowTitle(title)
+        self.edit.setText(text)
         #self.show()
 
         # Add the process and start it
@@ -540,3 +540,19 @@ class MyQProcess(QWidget):
         w = MyQProcess()
 
         return app.exec_()
+
+
+class massagewidget(QWidget):
+    def __init__(self, massage):
+        super().__init__()
+        """create a windoe whith a massage for the user"""
+        self.massage = QLabel(massage)
+        self.setFixedSize(300, 300)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.massage)
+
+
+
+
+

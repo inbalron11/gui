@@ -1,22 +1,12 @@
-from PyQt5.QtGui import QFont, QStandardItemModel, QDropEvent, QStandardItem
-from PyQt5.QtCore import Qt, pyqtSignal, QFileInfo
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QGroupBox,\
-    QPushButton, QLineEdit, QWidget, QFrame, QLabel, QListWidget, QApplication, QFileSystemModel,QTreeView,\
-    QListView, QListWidgetItem, QAbstractItemView, QMenuBar, QAction, QMenu, QCheckBox, QListWidgetItem, QMessageBox,\
-    QCheckBox, QTreeWidget, QTreeWidgetItem, QGraphicsView, QFileDialog
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QGroupBox,\
+    QLineEdit, QWidget, QApplication, QMessageBox
+from PyQt5.QtCore import QProcess,QThread,QThreadPool,QRunnable,pyqtSignal, QObject
+
 import sys
 from qgis.core import *
 from qgis.gui import *
-import gdal
-import os
+from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit, massagewidget, MyQProcess
 import ast
-import subprocess
-import threading as thr
-
-from costum_widgets import  map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit
-import fileinput
-
-
 
 sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets/tools')
 
@@ -24,9 +14,12 @@ from polygonize import Polygonize
 
 
 class Polygonize_ui(QWidget):
+    running = pyqtSignal(name= 'running')
     def __init__(self):
         super().__init__()
+        """this is a widget for poligonizing a raster"""
 
+        # qline for adding the raster path
         self.raster_path_group = QGroupBox()
         raster_path_group_layout = QVBoxLayout()
         self.raster_path_group.setTitle('Raster path')
@@ -35,14 +28,17 @@ class Polygonize_ui(QWidget):
         self.raster_path_line.setText('/home/inbal/data/metula/out_supervised2/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_2.5_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm_OV_0.5_gpu0__llkMap.tif')
         raster_path_group_layout.addWidget(self.raster_path_line)
 
+        # qline for adding labels
         self.costumelabels_group = QGroupBox()
         self.costumelabels_group.setCheckable(True)
+        self.costumelabels_group.setChecked(False)
         costumelabels_group_layout = QVBoxLayout()
         self.costumelabels_group.setTitle('Set costume labels')
         self.costumelabels_group.setLayout(costumelabels_group_layout)
-        self.costumelabels = QListWidget()
+        self.costumelabels = QLineEdit()
         costumelabels_group_layout.addWidget(self.costumelabels)
 
+        # qline for adding the path for the labels files
         self.labels_path_group = QGroupBox()
         labels_path_group_layout = QVBoxLayout()
         self.labels_path_group.setTitle('Labels file')
@@ -51,6 +47,7 @@ class Polygonize_ui(QWidget):
         self.labels_path.setText('/home/inbal/data/metula/out_supervised2/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_2.5_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm.lbl')
         labels_path_group_layout.addWidget(self.labels_path)
 
+        # qline for adding the path for the output shapefile
         self.shapefile_path_group = QGroupBox()
         shapefile_path_group_layout = QVBoxLayout()
         self.shapefile_path_group.setTitle('Output path')
@@ -59,6 +56,7 @@ class Polygonize_ui(QWidget):
         self.shapefile_path.setText('/home/inbal/inbal/qgis_programing/standaloneapp/apptrials/')
         shapefile_path_group_layout.addWidget(self.shapefile_path)
 
+        # qline for adding the output layer name
         self.layer_name_group = QGroupBox()
         layer_name_group_layout = QVBoxLayout()
         self.layer_name_group.setTitle('Layer name')
@@ -67,6 +65,7 @@ class Polygonize_ui(QWidget):
         self.layer_name.setText('thematic')
         layer_name_group_layout.addWidget(self.layer_name)
 
+        # qline for adding the field name where the lables will be added
         self.class_name_group = QGroupBox()
         class_name_group_layout = QVBoxLayout()
         self.class_name_group.setTitle('Class name')
@@ -75,6 +74,7 @@ class Polygonize_ui(QWidget):
         self.class_name.setText('class')
         class_name_group_layout.addWidget(self.class_name)
 
+        # qline for adding the field name where the pixel values will be added
         self.idfield_group = QGroupBox()
         idfield_group_layout = QVBoxLayout()
         self.idfield_group.setTitle('Field')
@@ -83,16 +83,12 @@ class Polygonize_ui(QWidget):
         self.idfield.setText('id')
         idfield_group_layout.addWidget(self.idfield)
 
-
+        # push button for starting the polygonization
         self.button_box = QDialogButtonBox()
         self.poligonizebottun = self.button_box.addButton('Poligonize', QDialogButtonBox.NoRole)
+        self.poligonizebottun.clicked.connect(self.run)
 
-        #self.message = QMessageBox()
-        #self.message.setWindowTitle('Polygonize')
-        #self.message.setText('Running,pleas wait')
-        #self.message.setStyleSheet("background-color: white")
-
-
+        # add all widgets to the layout
         layout = QVBoxLayout()
         layout.addWidget(self.raster_path_group)
         layout.addWidget(self.costumelabels_group)
@@ -103,20 +99,23 @@ class Polygonize_ui(QWidget):
         layout.addWidget(self.idfield_group)
         layout.addWidget(self.idfield_group)
         layout.addWidget(self.button_box)
-
-
         self.setLayout(layout)
 
+        # this will be the polyginize class object
         self.poly = None
+
+        # this is the layerspanel widget to wich the result will be added at the end
         self.legendwidget = None
 
-        self.poligonizebottun.clicked.connect(self.run)
-
-
+        # massage when done running:
+        self.massage = QMessageBox(text='Done')
 
 
     def collect_users_input(self):
 
+        """collect the input from all widgets and init the poliginize object with costume labels
+        or with the selected labels file"""
+        #self.show_massage()
         rasterpath = self.raster_path_line.text()
         labels = self.labels_path.text()
         shapefile_path = self.shapefile_path.text()
@@ -124,10 +123,21 @@ class Polygonize_ui(QWidget):
         class_name = self.class_name.text()
         idfield = self.idfield.text()
 
-        self.poly = Polygonize(raster_path=rasterpath, labels_path=labels, shapefile_path=shapefile_path,
-                           layer_name=layer_name, class_name=class_name, idfield = idfield)
+        if self.costumelabels_group.isChecked():
+            costumelabels = '[' + self.costumelabels.text() + ']'
+            lstcostumelabels = ast.literal_eval(costumelabels)
+
+            poly = Polygonize(raster_path=rasterpath, labels_list= lstcostumelabels , shapefile_path=shapefile_path,
+                                   layer_name=layer_name, class_name=class_name, idfield=idfield)
+            return poly
+
+        else:
+            poly = Polygonize(raster_path=rasterpath, labels_path=labels, shapefile_path=shapefile_path,
+                                   layer_name=layer_name, class_name=class_name, idfield=idfield)
+            return poly
 
     def clear(self):
+        """clear the text from all widgets"""
         self.raster_path_line.clear()
         self.labels_path.clear()
         self.shapefile_path.clear()
@@ -137,12 +147,21 @@ class Polygonize_ui(QWidget):
         self.idfield.clear()
 
     def run(self):
-        self.collect_users_input()
-        self.poly.polygonize()
-        newlayer = self.poly.output_shp + self.poly.layer_name + '.shp'
-        print (newlayer)
+        """start polygonizing when 'polygonize' button is clicked"""
+
+        poly = self.collect_users_input()
+        poly.polygonize()
+        newlayer = poly.output_shp + poly.layer_name + '.shp'
+        self.massage.show()
         self.legendwidget.add_to_canvas([newlayer])
         self.clear()
+
+
+
+
+
+
+
 
 
 

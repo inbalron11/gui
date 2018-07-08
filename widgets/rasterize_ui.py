@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget, QMessageBox
 import sys
 from qgis.core import *
 from qgis.gui import *
@@ -62,15 +62,10 @@ class Rasterize_ui(QWidget):
         self.lables_file_group.setChecked(False)
         lables_file_group_layout.addWidget(self.lables_file_line)
 
-
         self.button_box = QDialogButtonBox()
         self.rasterizebottun = self.button_box.addButton('Rasterize', QDialogButtonBox.NoRole)
 
-
         self.newraster = None
-
-
-
 
         layout = QVBoxLayout()
         layout.addWidget(self.shapefile_path_group)
@@ -88,18 +83,23 @@ class Rasterize_ui(QWidget):
 
         self.rasterizebottun.clicked.connect(self.run)
 
+        self.massage = QMessageBox()
+
     def collect_users_input(self):
+        if self.lables_file_group.isChecked():
+            lables_file = self.lables_file_line.text()
+        else:
+            lables_file = None
         shapefile_path_line = self.shapefile_path_line.text()
         out_raster_path = self.out_raster_path_line.text()
         reference_raster = self.reference_raster_line.text()
         out_raster_name = self.out_raster_name_line.text()
         field_name = self.field_name_line.text()
-        lables_file = self.lables_file_line.text()
+
         self.newraster = out_raster_path + out_raster_name
 
         self.ras = Rasterize(shapefile_path_line, out_raster_path, reference_raster, out_raster_name=out_raster_name,
-                             field_name = field_name, lables_file = None)
-
+                             field_name=field_name, lables_file=lables_file)
 
     def clear(self):
         self.shapefile_path_line.clear()
@@ -113,8 +113,6 @@ class Rasterize_ui(QWidget):
 
         self.legendwidget.add_to_canvas([self.newraster])
 
-
-
     def run(self):
         shapefile_path_line = self.shapefile_path_line.text()
         out_raster_path = self.out_raster_path_line.text()
@@ -126,4 +124,6 @@ class Rasterize_ui(QWidget):
 
         ras = Rasterize(shapefile_path_line, out_raster_path, reference_raster, out_raster_name= out_raster_name,
                         field_name=field_name, lables_file=None)
+        self.massage.setText('Done')
+        self.massage.show()
         self.clear()

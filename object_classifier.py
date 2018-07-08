@@ -2,7 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QFileDialog, QApplication, QHBoxLayout,QLabel,\
     QDialogButtonBox,QGroupBox, QToolButton, QMenuBar, QWidget, QStackedWidget, QDockWidget, QAction,\
-    QGraphicsView, QTreeWidgetItem, QFrame, QTextEdit
+    QGraphicsView, QTreeWidgetItem, QFrame, QTextEdit,QMessageBox
 
 from qgis.core import *
 from qgis.gui import *
@@ -16,6 +16,7 @@ from costum_widgets import map_canvas, LayersPanel,filetree
 from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
+from confusinmatrix_ui import Confusion_matrix_ui
 
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
@@ -138,13 +139,22 @@ class object_classifier_app (QMainWindow):
         rastrizewidget.legendwidget = self.layerpanel
         self.StackedWidget.addWidget(rastrizewidget)
 
+        # set confusion matrix widget
+        confusionmatrixwidget = Confusion_matrix_ui()
+        self.StackedWidget.addWidget(confusionmatrixwidget)
+        self.StackedWidget.addWidget(confusionmatrixwidget.resultsgroup)
+
         self.threadpool = QThreadPool()
+        self.massage = QMessageBox(text='Running')
 
         # connect signals and slots
         self.poligonize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(polygonizewidget))
         self.poligonize.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Polygonize'))
         self.rasterize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(rastrizewidget))
         self.rasterize.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Rasterize'))
+        self.confusiomatrix.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(confusionmatrixwidget))
+        self.confusiomatrix.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Confusion Matrix'))
+        confusionmatrixwidget.done.connect(lambda: self.StackedWidget.setCurrentWidget(confusionmatrixwidget.resultsgroup))
         self.supervised.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Supervised classification'))
         self.supervised.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
         self.supervised_classification.step1next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))

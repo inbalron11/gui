@@ -121,7 +121,7 @@ class supervised_classification_ui(QWidget):
         paramslayout.addWidget(self.objectresolutionlineedit, 2, 5)
 
         # Qprocess to run the classification
-        self.process = MyQProcess()
+        self.process = MyQProcess('Start classification...','Running classification...')
         # creates step1 and step2 ui
         self.createstep1()
         self.createstep2()

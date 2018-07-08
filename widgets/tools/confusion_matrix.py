@@ -25,8 +25,8 @@ class Confusion_matrix:
         # read raster as ndrarray and split it into n nd arrays (n = number of processes)
         true_array = true_raster.GetRasterBand(1).ReadAsArray()
         predicted_array = predicted_raster.GetRasterBand(1).ReadAsArray()
-        self.splittrue = np.array_split(true_array, self.threads)
-        self.splitpredicted = np.array_split(predicted_array, self.threads)
+        self.splittrue = np.array_split(true_array,  self.numpprocesses)
+        self.splitpredicted = np.array_split(predicted_array,  self.numpprocesses)
 
         # get raster lables (unique pixel values)
         self.lables = np.unique(true_array)[1::]
