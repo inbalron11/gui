@@ -303,7 +303,7 @@ class datatreeview(QTreeView):
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.setDropIndicatorShown(True)
         self.root.setFlags(Qt.ItemIsDropEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-        self.dropped.connect(self.collect_user_input)
+        self.dropped.connect(self.collectinput)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
@@ -349,8 +349,9 @@ class datatreeview(QTreeView):
                 bandsindex = list(range(1, bandscount + 1))
                 for index in reversed(bandsindex):
                     band = QStandardItem('band' + ' ' + str(index))
-                    band.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                    band.setCheckState(Qt.Checked)
+                    #band.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    band.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    #band.setCheckState(Qt.Checked)
                     treeitem.appendRow(band)
                 treeitem.sortChildren(0, Qt.AscendingOrder)
                 self.root.appendRows([treeitem])
@@ -366,96 +367,27 @@ class datatreeview(QTreeView):
         self.root.setFlags(Qt.ItemIsDropEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
         self.setModel(self.model)
 
-    def collect_user_input(self):
-        """collect all theinput into a dictionary: 'datasets' value is a list of datasets paths,
-         'selectedbands' value is a list of bands selected by the user, 'bandsdict' value is a dictionary with dataset
-          names and band number wich used for the feature bands selection """
+    def collectinput(self):
         datasets = []
         selectedbands = []
-        bandsdict={}
+        # bandsdict example: {rastername-band1: [0,0], rastername-band2:[0,1]
+        bandsdict = {}
+        # add dataset to the dictionaty a key and it path and bands as value
         for i in range(self.model.rowCount(self.root.index())):
             dataset = self.model.item(i)
             datasets += [dataset.text()]
             datasetname = (os.path.basename(dataset.text()))
-            bandsdict[datasetname] = {}
             bands = []
+            # add every band to the dictionary- bands text as key and [datasetindex, bandindex] as value (example: band1 : [0,0]
             for j in range(self.model.rowCount(dataset.index())):
                 band = dataset.child(j)
-                if band.checkState() == Qt.Checked:
-                    bands += [j]
+                bands += [j]
             for k in bands:
-                selectedbands += [[i, k]]
-                bandsdict[datasetname][datasetname + ' ' + ':' + ' ' + dataset.child(k).text()] = [i, k]
+                bandtext = datasetname + ' - ' + 'band ' + str(k+1)
+                bandsdict[bandtext] = [i, k]
+                selectedbands += [[i,k]]
         self.bandsdict = bandsdict
-        inputdict = {'datasets':datasets, 'selectedbands':selectedbands, 'bandsdict':bandsdict}
-        return inputdict
-
-
-class bands_pairing(QWidget):
-    def __init__(self, dataview):
-        super().__init__()
-        """a tree widget to create a list of datasets and select bands from each dataset"""
-
-        self.firstband = QListWidget()
-        self.secondband = QListWidget()
-        self.pairs = QTreeWidget()
-        self.pairs.setColumnCount(2)
-        self.pairs.setHeaderLabels(['first band', 'second band'])
-        self.pairbutton = QPushButton('Pair')
-        self.dataview = dataview
-        self.pairbutton.clicked.connect(self.add_pair)
-        mainlayout = QVBoxLayout()
-        sublayout = QHBoxLayout()
-        sublayout.addWidget(self.firstband)
-        sublayout.addWidget(self.secondband)
-        firstsecondgroup = QGroupBox()
-        firstsecondgroup.setLayout(sublayout)
-        mainlayout.addWidget(firstsecondgroup)
-        mainlayout.addWidget(self.pairbutton)
-        mainlayout.addWidget(self.pairs)
-        self.maingroup = QGroupBox()
-        self.maingroup.setLayout(mainlayout)
-
-    def additems(self):
-        """when the widget is activated, a list of selected bands will be added"""
-        dict = self.dataview.collect_user_input()
-        for i in dict['bandsdict'].keys():
-            name = os.path.basename(i)
-            for j in dict['bandsdict'][name].keys():
-                band = QListWidgetItem(j)
-                band2 = QListWidgetItem(j)
-                self.firstband.addItem(band)
-                self.secondband.addItem(band2)
-
-    def add_pair(self):
-        """when pair button is pressed the paire will be add to the list"""
-        firstitem = self.firstband.selectedItems()
-        firstitemtext = firstitem[0].text()
-        seconditem = self.secondband.selectedItems()
-        seconditemtext = seconditem[0].text()
-        pairitem = QTreeWidgetItem()
-        pairitem.setText(0 ,firstitemtext)
-        pairitem.setText(1,seconditemtext )
-        self.pairs.addTopLevelItem(pairitem)
-        self.get_pairs()
-
-    def get_pairs(self):
-        """returns  1. a dictionary of selected bands created with the datatreeview widget, 2. a list of featurebands,
-         3. a list of texts from the items in the widgets (dataset and band number) """
-        dict = self.dataview.collect_user_input()
-        pairs = []
-        featurebands = []
-        for i in range(self.pairs.topLevelItemCount()):
-            item = self.pairs.topLevelItem(i)
-            datasetname = item.text(0).split(' : ')[0]
-            item1text = item.text(0)
-            item2text = item.text(1)
-            pairs += [item1text + '|' + item2text]
-            band1 = dict['bandsdict'][datasetname][item1text]
-            band2 = dict['bandsdict'][datasetname][item2text]
-            pair = [dict['selectedbands'].index(band1), dict['selectedbands'].index(band2)]
-            featurebands += [pair]
-        return [dict['selectedbands'], featurebands, pairs]
+        return [self.bandsdict, datasets, selectedbands]
 
 
 class filetree(QTreeView):
@@ -486,7 +418,7 @@ class MyQProcess(QWidget):
         # Add the UI components (here we use a QTextEdit to display the stdout from the process)
         self.layout = QVBoxLayout()
         self.stoppush = QPushButton('Stop')
-        self.edit = QLabel()
+        self.edit = QTextEdit()
         self.edit.setStyleSheet('font-size:12pt')
         self.layout.addWidget(self.edit)
         self.layout.addWidget(self.stoppush)
@@ -503,7 +435,7 @@ class MyQProcess(QWidget):
         self.process = QProcess()
         self.setupProcess()
         self.stoppush.clicked.connect(self.kill)
-        self.process.finished.connect(lambda: self.edit.setText('Done'))
+        #self.process.finished.connect(lambda: self.edit.setText('Done'))
 
     def setupProcess(self):
         # Set the channels
@@ -529,11 +461,13 @@ class MyQProcess(QWidget):
     def kill(self):
         print('killing process')
         self.process.terminate()
+        self.edit.close()
 
 
     def readStdOutput(self):
         # Every time the process has something to output we attach it to the QTextEdit
-        self.edit.setText(str(self.process.readAllStandardOutput()))
+        #self.edit.setText(str(self.process.readAllStandardOutput()))
+        self.edit.append(str(self.process.readAllStandardOutput()))
 
     def main():
         app = QApplication(sys.argv)
@@ -551,6 +485,120 @@ class massagewidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.massage)
+
+
+class treewidget(QTreeWidget):
+    def __init__(self):
+        super().__init__()
+    def keyPressEvent(self, event):
+        """when 'delet' key is pressed a signal for deleting the current layer from the pair widget is emmited"""
+        if event.key() == Qt.Key_Delete:
+            self.takeTopLevelItem(self.indexOfTopLevelItem(self.currentItem()))
+        else:
+                pass
+
+
+class bands_pairing2(QWidget):
+    def __init__(self, dataview):
+        super().__init__()
+        """a tree widget to create a list of datasets and select bands from each dataset"""
+
+        self.dataview = dataview
+        self.firstband = QTreeView()
+        self.secondband = QTreeView()
+        self.firstband.setModel(self.dataview.model)
+        self.secondband.setModel(self.dataview.model)
+        self.pairs = treewidget()
+        self.pairs.setColumnCount(2)
+        self.pairs.setHeaderLabels(['first band', 'second band'])
+        self.pairbutton = QPushButton('Pair')
+
+        self.pairbutton.clicked.connect(self.add_pair)
+        mainlayout = QVBoxLayout()
+        sublayout = QHBoxLayout()
+        sublayout.addWidget(self.firstband)
+        sublayout.addWidget(self.secondband)
+        firstsecondgroup = QGroupBox()
+        firstsecondgroup.setLayout(sublayout)
+        mainlayout.addWidget(firstsecondgroup)
+        mainlayout.addWidget(self.pairbutton)
+        mainlayout.addWidget(self.pairs)
+        self.maingroup = QGroupBox()
+        self.maingroup.setLayout(mainlayout)
+
+    def additems(self):
+        """when the widget is activated, a list of selected bands will be added"""
+        dict = self.dataview.collect_user_input()
+        for i in dict['bandsdict'].keys():
+            name = os.path.basename(i)
+            for j in dict['bandsdict'][name].keys():
+                band = QListWidgetItem(j)
+                band2 = QListWidgetItem(j)
+                self.firstband.addItem(band)
+                self.secondband.addItem(band2)
+
+    def add_pair(self):
+        """when pair button is pressed the paire will be add to the list"""
+        # get selected index
+        firstitem = self.firstband.selectedIndexes()
+        # item text (example:band1)
+        firstitemtext = self.firstband.model().itemData(firstitem[0])[0]
+        # parent text (example: rastername.tif)
+        firstparent = self.firstband.model().itemFromIndex(firstitem[0]).parent().data(0)
+        #text to appear on the pairing widget
+        firstpairtext = os.path.basename(firstparent) + ' - ' + firstitemtext
+
+        # get selected index
+        seconditem = self.secondband.selectedIndexes()
+        # item text (example:band1)
+        seconditemtext = self.secondband.model().itemData(seconditem[0])[0]
+        # parent text (example: rastername.tif)
+        secondparent = self.firstband.model().itemFromIndex(firstitem[0]).parent().data(0)
+        # text to appear on the pairing widget
+        secondpairtext = os.path.basename(secondparent) + ' - ' + seconditemtext
+
+        print(firstitemtext)
+        print(os.path.basename(firstparent))
+
+        pairitem = QTreeWidgetItem()
+        pairitem.setText(0, firstpairtext)
+        pairitem.setText(1, secondpairtext)
+        self.pairs.addTopLevelItem(pairitem)
+        #self.get_pairs()
+
+    def get_pairs(self):
+        """returns  1. a dictionary of selected bands created with the datatreeview widget, 2. a list of featurebands,
+         3. a list of texts from the items in the widgets (dataset and band number) """
+        bandsdict = self.dataview.collectinput()[0]
+        print (bandsdict)
+        datasets = self.dataview.collectinput()[1]
+        selectedbands = self.dataview.collectinput()[2]
+        print(selectedbands)
+        featurebands = []
+        feturebandstext = []
+        for i in range(self.pairs.topLevelItemCount()):
+            item = self.pairs.topLevelItem(i)
+            item1text = item.text(0)
+            item2text = item.text(1)
+            # get the list of the items from the widget
+            feturebandstext += [[item1text, item2text]]
+            band1 = bandsdict[item1text]
+            band2 = bandsdict[item2text]
+            # get the pair of bands by indexes
+            pair = [selectedbands.index(band1), selectedbands.index(band2)]
+            featurebands += [pair]
+        print(selectedbands)
+        print(featurebands)
+        return [selectedbands, featurebands,feturebandstext]
+
+
+
+
+
+
+
+
+
 
 
 

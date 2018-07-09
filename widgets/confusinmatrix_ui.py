@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap
 import sys
 from qgis.core import *
 from qgis.gui import *
-from costum_widgets import map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit
+from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit
 
 sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets/tools')
 from confusion_matrix import Confusion_matrix

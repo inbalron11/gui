@@ -17,10 +17,13 @@ from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
 from confusinmatrix_ui import Confusion_matrix_ui
+#from canvastools import PolyMapTool, PointMapTool, SelectMapTool
+
 
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
 qgis_prefix = '/opt/qgis/QGIS/build/output/'
+
 
 class object_classifier_app (QMainWindow):
     def __init__(self):
@@ -80,7 +83,6 @@ class object_classifier_app (QMainWindow):
         self.toolZoomOut = QgsMapToolZoom(self.canvas, True)  # true = out
         self.toolZoomOut.setAction(actionZoomOut)
 
-
         #init the file tree widget and set as a dock widget
         self.treewidget = filetree()
         self.tree = QDockWidget("Select Data", self)
@@ -99,13 +101,15 @@ class object_classifier_app (QMainWindow):
         self.poligonize = QAction('Polygonize')
         self.rasterize = QAction('Rasterize')
         self.confusiomatrix = QAction('Confusionmatrix')
-        self.loadproject = QAction('Load project')
+        self.loadprojectaction = QAction('Load project')
+        self.saveprojectaction = QAction('Save project')
         classificationmenue.addAction(self.supervised)
         classificationmenue.addAction(self.unsupervised)
         toolsmenue.addAction(self.poligonize)
         toolsmenue.addAction(self.rasterize)
         toolsmenue.addAction(self.confusiomatrix)
-        filemenue.addAction(self.loadproject)
+        filemenue.addAction(self.loadprojectaction)
+        filemenue.addAction(self.saveprojectaction)
        
         # create a layerpanel
         self.layerpanel = LayersPanel(self.canvas)
@@ -121,6 +125,7 @@ class object_classifier_app (QMainWindow):
         self.StackedWidget = QStackedWidget()
         self.StackedWidget.addWidget(self.supervised_classification.step1)
         self.StackedWidget.addWidget(self.supervised_classification.step2)
+        self.StackedWidget.addWidget(self.supervised_classification.step3)
         self.StackedWidget.setCurrentWidget(self.supervised_classification.step1)
         self.StackedWidget_dock = QDockWidget('classification',self)
         self.StackedWidget_dock.setWidget(self.StackedWidget)
@@ -159,14 +164,15 @@ class object_classifier_app (QMainWindow):
         self.supervised.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
         self.supervised_classification.step1next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
         self.supervised_classification.step2back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
-
-
-
+        self.supervised_classification.step2next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step3))
+        self.supervised_classification.step3back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
+        self.loadprojectaction.triggered.connect(self.openproject)
+        self.saveprojectaction.triggered.connect(self.saveproject)
 
 
     def zoomIn(self):
         """canvas zoom in tool"""
-        self.canvas.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.canvas.setMapTool(self.toolZoomIn)
 
     def zoomOut(self):
         """canvas zoom out tool"""
@@ -175,6 +181,24 @@ class object_classifier_app (QMainWindow):
     def pan(self):
         """canvas pan tool"""
         self.canvas.setMapTool(self.toolPan)
+
+    def saveproject(self):
+        savedfile = QFileDialog.getSaveFileName(self, "Save project", ".", "(*.qgs)")[0] +'.qgs'
+        self.layerpanel.project.setFileName(savedfile)
+        crs = QgsCoordinateReferenceSystem("EPSG:31467")
+        self.layerpanel.project.setCrs(crs)
+        self.layerpanel.project.defaultCrsForNewLayers()
+        self.layerpanel.project.write()
+
+    def openproject(self):
+        file = QFileDialog.getOpenFileName(self, "Open project", ".", "(*.qgs)")[0]
+        fileinfo = QFileInfo(file)
+        projectfile = fileinfo
+        crs = QgsCoordinateReferenceSystem("EPSG:31467")
+        self.layerpanel.project.setCrs(crs)
+        self.layerpanel.project.defaultCrsForNewLayers()
+        self.layerpanel.project.read(projectfile)
+
 
 
     def main(argv):

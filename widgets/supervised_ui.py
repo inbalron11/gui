@@ -13,7 +13,7 @@ import ast
 import subprocess
 import threading as thr
 
-from costum_widgets import map_canvas, LayersPanel, datatreeview, bands_pairing, inputlistwidget, lineedit, MyQProcess
+from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit, MyQProcess, bands_pairing2
 import fileinput
 
 
@@ -24,11 +24,12 @@ class supervised_classification_ui(QWidget):
         super().__init__()
         """init a widget for supervised classification"""
 
-        #step1- chosing dataset and bands, step 2- chosing trainingset,roi,classname,params,outpath
+        #step1- chosing datasets, step 2- selecting featurebands, step 3- chosing trainingset,roi,classname,params,outpath
         self.step1 = QGroupBox()
         self.step2 = QGroupBox()
+        self.step3 = QGroupBox()
         self.lstwidget_dataset = datatreeview()
-        self.featurebandwidget = bands_pairing(self.lstwidget_dataset)
+        self.featurebandwidget = bands_pairing2(self.lstwidget_dataset)
         self.lstwidget_trainingset = inputlistwidget()
         self.lstwidget_roi = inputlistwidget()
         self.lineEdit_out = lineedit()
@@ -85,9 +86,9 @@ class supervised_classification_ui(QWidget):
 
         # group 6
         self.featurebands = QGroupBox()
-        self.featurebands.setCheckable(True)
-        self.featurebands.setChecked(False)
-        self.featurebands.toggled.connect(self.set_fixed_bands)
+        #self.featurebands.setCheckable(True)
+        #self.featurebands.setChecked(False)
+        #self.featurebands.toggled.connect(self.set_fixed_bands)
         self.featurebands.setTitle("Feature bands")
 
         featurebandslayout = QVBoxLayout()
@@ -124,12 +125,17 @@ class supervised_classification_ui(QWidget):
         self.process = MyQProcess('Start classification...','Running classification...')
         # creates step1 and step2 ui
         self.createstep1()
+        self.createstep3()
         self.createstep2()
 
         #connect signals and slots
-        self.step2saveroject.clicked.connect(self.create_project)
+        self.step3saveroject.clicked.connect(self.create_project)
         self.step1open.clicked.connect(self.load_supervised_project)
-        self.step2classify.clicked.connect(self.run_supervised_classification)
+        self.step3classify.clicked.connect(self.run_supervised_classification)
+        self.step1clear.clicked.connect(self.clear_all_data)
+        self.step3clear.clicked.connect(self.clear_all_data)
+        self.step2clear.clicked.connect(self.clear_all_data)
+
 
     def runclass(self):
         """emits a signal when the classification is runing"""
@@ -142,43 +148,42 @@ class supervised_classification_ui(QWidget):
         self.button_box_nextback = QDialogButtonBox()
         self.step1next = self.button_box_nextback.addButton('Next', QDialogButtonBox.NoRole)
         self.step1open = self.button_box_nextback.addButton('Open project', QDialogButtonBox.NoRole)
+        self.step1clear = self.button_box_nextback.addButton('Clear', QDialogButtonBox.NoRole)
         step1grouplayout.addWidget(self.dataset)
-        step1grouplayout.addWidget(self.featurebands)
+        #step1grouplayout.addWidget(self.featurebands)
         step1grouplayout.addWidget(self.button_box_nextback)
         return
 
-    def createstep2(self):
+    def createstep3(self):
         """create the ui for step 1- selecting training,roi,params.outpath"""
+        step3grouplayout = QVBoxLayout()
+        self.step3.setLayout(step3grouplayout)
+        self.button_box_nextback = QDialogButtonBox()
+        self.step3classify = self.button_box_nextback.addButton('Classify', QDialogButtonBox.NoRole)
+        self.step3clear = self.button_box_nextback.addButton('Clear', QDialogButtonBox.NoRole)
+        self.step3saveroject = self.button_box_nextback.addButton('Save project', QDialogButtonBox.NoRole)
+        self.step3back = self.button_box_nextback.addButton('Back', QDialogButtonBox.NoRole)
+        step3grouplayout.addWidget(self.trainingset)
+        step3grouplayout.addWidget(self.roi)
+        step3grouplayout.addWidget(self.classfield)
+        step3grouplayout.addWidget(self.outputpath)
+        step3grouplayout.addWidget(self.params)
+        step3grouplayout.addWidget(self.button_box_nextback)
+        return
+
+    def createstep2(self):
         step2grouplayout = QVBoxLayout()
         self.step2.setLayout(step2grouplayout)
         self.button_box_nextback = QDialogButtonBox()
-        self.step2classify = self.button_box_nextback.addButton('Classify', QDialogButtonBox.NoRole)
-        self.step2saveroject = self.button_box_nextback.addButton('Save project', QDialogButtonBox.NoRole)
+        self.step2next= self.button_box_nextback.addButton('Next', QDialogButtonBox.NoRole)
+        self.step2clear = self.button_box_nextback.addButton('Clear', QDialogButtonBox.NoRole)
         self.step2back = self.button_box_nextback.addButton('Back', QDialogButtonBox.NoRole)
-        step2grouplayout.addWidget(self.trainingset)
-        step2grouplayout.addWidget(self.roi)
-        step2grouplayout.addWidget(self.classfield)
-        step2grouplayout.addWidget(self.outputpath)
-        step2grouplayout.addWidget(self.params)
+        step2grouplayout.addWidget(self.featurebands)
         step2grouplayout.addWidget(self.button_box_nextback)
-        return
-
-    def set_fixed_bands(self):
-        """get the selcted bands from the datasetsselection widget and set them in the feature bands widget"""
-        if self.featurebands.isChecked():
-            self.featurebandwidget.firstband.clear()
-            self.featurebandwidget.secondband.clear()
-            self.featurebandwidget.additems()
-        else:
-            self.featurebandwidget.firstband.clear()
-            self.featurebandwidget.secondband.clear()
-            self.featurebandwidget.pairs.clear()
 
     def clear_all_data(self):
         """clear the data from all the widgets"""
         self.lstwidget_dataset.clear()
-        self.featurebandwidget.firstband.clear()
-        self.featurebandwidget.secondband.clear()
         self.featurebandwidget.pairs.clear()
         self.lstwidget_trainingset.clear()
         self.lstwidget_roi.clear()
@@ -191,11 +196,15 @@ class supervised_classification_ui(QWidget):
         self.overlapratiolineedit.clear()
         self.objectresolutionlineedit.clear()
 
+        # set the model for the band pairing widget
+        self.featurebandwidget.firstband.setModel(self.featurebandwidget.dataview.model)
+        self.featurebandwidget.secondband.setModel(self.featurebandwidget.dataview.model)
+
     def create_project(self):
         """create a project in a textfile when the user press save project"""
         folderename = QFileDialog.getExistingDirectory(None, "Select Folder")
         selectedpath = str(folderename) + '/'
-        input = self.supervised_classification_input()
+        input = self.supervised_classification_input()[0]
         strinput = str(input)
 
         # create and save project:
@@ -206,7 +215,7 @@ class supervised_classification_ui(QWidget):
 
     def supervised_classification_input(self):
         """get the users input fron all the widgets"""
-        dataset = self.lstwidget_dataset.collect_user_input()['datasets']
+        dataset = self.lstwidget_dataset.collectinput()[1]
         bands = self.featurebandwidget.get_pairs()[0]
         featurebands = self.featurebandwidget.get_pairs()[1]
         trainingset = self.lstwidget_trainingset.collect_input()
@@ -219,17 +228,20 @@ class supervised_classification_ui(QWidget):
         maxocurencedistance = self.maxoccurencelineedit.text()
         ovelrlapratio = self.overlapratiolineedit.text()
         objectresolution = self.objectresolutionlineedit.text()
-        datasetwidget = self.lstwidget_dataset.collect_user_input()['bandsdict']
+        #datasetwidget = self.lstwidget_dataset.collectinput()[1]
         feturebandspairs = self.featurebandwidget.get_pairs()[2]
+
+        inputlist = [dataset,bands,featurebands,trainingset,outpath,classname,mincellsize,maxcellsize,
+                     minocurencedistance,maxocurencedistance,ovelrlapratio,objectresolution, feturebandspairs]
 
         inputdict = {'dataset': dataset, 'bands': bands, 'featurebands': featurebands, 'trainingset': trainingset,
                       'roi': roi, 'outpath': outpath, 'classname': classname, 'mincellsize': float(mincellsize),
                       'maxcellsize': float(maxcellsize), 'minocurencedistance': float(minocurencedistance),
                       'maxocurencedistance': float(maxocurencedistance),
                       'ovelrlapratio': float(ovelrlapratio), 'objectresolution': float(objectresolution),
-                      'datasetwidget': datasetwidget, 'feturebandspairs': feturebandspairs}
+                      'feturebandspairs': feturebandspairs}
 
-        return inputdict
+        return [inputdict,inputlist]
 
 
     def load_supervised_project(self):
@@ -257,17 +269,17 @@ class supervised_classification_ui(QWidget):
         maxocurencedistance = data["maxocurencedistance"]
         ovelrlapratio = data["ovelrlapratio"]
         objectresolution = data["objectresolution"]
-        datasetwidget = data["datasetwidget"]
         featurebandspairs = data["feturebandspairs"]
 
         # set all data to the widgets
         # self.supervised_classification.lstwidget_dataset.model.clear()
         self.lstwidget_dataset.add_dataset(dataset)
 
+
         for pair in featurebandspairs:
             pairitem = QTreeWidgetItem()
-            pairitem.setText(0, pair.split('|')[0])
-            pairitem.setText(1, pair.split('|')[1])
+            pairitem.setText(0,pair[0])
+            pairitem.setText(1, pair[1])
             self.featurebandwidget.pairs.addTopLevelItem(pairitem)
         self.lstwidget_trainingset.load_data(trainingset)
         self.lstwidget_roi.load_data(roi)
@@ -280,25 +292,50 @@ class supervised_classification_ui(QWidget):
         self.overlapratiolineedit.setText(str(ovelrlapratio))
         self.objectresolutionlineedit.setText(str(objectresolution))
 
+    def check_parameters(self):
+        inputlist = self.supervised_classification_input()[1]
+
+        for i in inputlist:
+            if i == '' or i == [] or i == {}:
+                print('missing')
+                print(i)
+                return False
+        return True
+
+
     def run_supervised_classification(self):
         """run the classification when 'classify' bottun is pressed"""
         self.running.emit()
-        input = self.supervised_classification_input()
-        strinput = str(input)
+        input = self.supervised_classification_input()[0]
+        parameters = self.check_parameters()
+        if parameters == True:
+            strinput = str(input)
 
-        # create the classification script with the users input
-        copyclassificationscript = "cp " + "'/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/supervised_classification.py' " \
-                                   + "'" + input['outpath'] + "'"
-        os.system(copyclassificationscript)
-        openinput = "input_dict =" + strinput
+            # create the classification script with the users input
+            copyclassificationscript = "cp " + "'/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/supervised_classification.py' " \
+                                       + "'" + input['outpath'] + "'"
+            os.system(copyclassificationscript)
+            openinput = "input_dict =" + strinput
 
-        for line in fileinput.input(input['outpath'] + 'supervised_classification.py', inplace=True):
-            print(line.rstrip().replace('#open input', openinput))
+            for line in fileinput.input(input['outpath'] + 'supervised_classification.py', inplace=True):
+                print(line.rstrip().replace('#open input', openinput))
 
-        cmd = 'python3 ' + input['outpath'] + 'supervised_classification.py'
-        print (cmd)
-        #self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
-        self.process.cmd = cmd
-        self.process.start_process()
+            cmd = 'python3 ' + input['outpath'] + 'supervised_classification.py'
+            print(cmd)
+            # self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
+            self.process.cmd = cmd
+            self.process.start_process()
+        else:
+            massage = QMessageBox(self)
+            massage.setText('Some parameters are missing')
+            massage.show()
+
+
+
+
+
+
+
+
 
 
