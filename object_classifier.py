@@ -184,20 +184,23 @@ class object_classifier_app (QMainWindow):
 
     def saveproject(self):
         savedfile = QFileDialog.getSaveFileName(self, "Save project", ".", "(*.qgs)")[0] +'.qgs'
-        self.layerpanel.project.setFileName(savedfile)
-        crs = QgsCoordinateReferenceSystem("EPSG:31467")
-        self.layerpanel.project.setCrs(crs)
-        self.layerpanel.project.defaultCrsForNewLayers()
-        self.layerpanel.project.write()
+        try:
+            self.layerpanel.project.setFileName(savedfile)
+            self.layerpanel.project.write()
+        except:
+            pass
+
 
     def openproject(self):
         file = QFileDialog.getOpenFileName(self, "Open project", ".", "(*.qgs)")[0]
         fileinfo = QFileInfo(file)
-        projectfile = fileinfo
-        crs = QgsCoordinateReferenceSystem("EPSG:31467")
-        self.layerpanel.project.setCrs(crs)
-        self.layerpanel.project.defaultCrsForNewLayers()
-        self.layerpanel.project.read(projectfile)
+        projectfile = fileinfo.filePath()
+        print(projectfile)
+        try:
+            self.layerpanel.project.read(projectfile)
+        except:
+            pass
+
 
 
 

@@ -435,7 +435,7 @@ class MyQProcess(QWidget):
         self.process = QProcess()
         self.setupProcess()
         self.stoppush.clicked.connect(self.kill)
-        #self.process.finished.connect(lambda: self.edit.setText('Done'))
+        self.process.finished.connect(lambda: self.edit.append('Done'))
 
     def setupProcess(self):
         # Set the channels
