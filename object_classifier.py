@@ -1,8 +1,8 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QFileDialog, QApplication, QHBoxLayout,QLabel,\
-    QDialogButtonBox,QGroupBox, QToolButton, QMenuBar, QWidget, QStackedWidget, QDockWidget, QAction,\
-    QGraphicsView, QTreeWidgetItem, QFrame, QTextEdit,QMessageBox
+    QMenuBar, QStackedWidget, QDockWidget, QAction,\
+    QFrame,QMessageBox
 
 from qgis.core import *
 from qgis.gui import *
@@ -17,8 +17,6 @@ from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
 from confusinmatrix_ui import Confusion_matrix_ui
-#from canvastools import PolyMapTool, PointMapTool, SelectMapTool
-
 
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
@@ -60,6 +58,13 @@ class object_classifier_app (QMainWindow):
         actionPanPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Hands-Hand-icon.png')
         actionZoomInPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-In-icon.png')
         actionZoomOutPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-Out-icon.png')
+        actionsave = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/save.png'))
+        actionsaveas = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/saveas.jpg'))
+        actionnew = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/newproject.png'))
+        actionloadproject = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/openproject.png'))
+        actionpolygonize = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/polygon.png'))
+        actionrasterize = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/raster.png'))
+        actionconfusion = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/matrix.png'))
 
         actionZoomIn.setIcon(QIcon(actionZoomInPixmap))
         actionZoomOut.setIcon(QIcon(actionZoomOutPixmap))
@@ -93,23 +98,27 @@ class object_classifier_app (QMainWindow):
         # init a menue bar and its actions
         self.menuebar = QMenuBar()
         self.setMenuBar(self.menuebar)
-        filemenue = self.menuebar.addMenu('File')
+        filemenue = self.menuebar.addMenu('Project')
         classificationmenue = self.menuebar.addMenu('Classification')
         toolsmenue = self.menuebar.addMenu('Tools')
         self.supervised = QAction('supervised')
         self.unsupervised = QAction('unsupernised')
-        self.poligonize = QAction('Polygonize')
-        self.rasterize = QAction('Rasterize')
-        self.confusiomatrix = QAction('Confusionmatrix')
-        self.loadprojectaction = QAction('Load project')
-        self.saveprojectaction = QAction('Save project')
+        self.poligonize = QAction(actionpolygonize,'Polygonize')
+        self.rasterize = QAction(actionrasterize,'Rasterize')
+        self.confusiomatrix = QAction(actionconfusion,'Confusionmatrix')
+        self.newprojectaction = QAction(actionnew,'New project')
+        self.loadprojectaction = QAction(actionloadproject,'Load project')
+        self.saveprojectasaction = QAction(actionsaveas,'Save project as')
+        self.saveaction = QAction(actionsave,'Save')
         classificationmenue.addAction(self.supervised)
         classificationmenue.addAction(self.unsupervised)
         toolsmenue.addAction(self.poligonize)
         toolsmenue.addAction(self.rasterize)
         toolsmenue.addAction(self.confusiomatrix)
         filemenue.addAction(self.loadprojectaction)
-        filemenue.addAction(self.saveprojectaction)
+        filemenue.addAction(self.saveprojectasaction)
+        filemenue.addAction(self.newprojectaction)
+        filemenue.addAction(self.saveaction)
        
         # create a layerpanel
         self.layerpanel = LayersPanel(self.canvas)
@@ -152,6 +161,8 @@ class object_classifier_app (QMainWindow):
         self.threadpool = QThreadPool()
         self.massage = QMessageBox(text='Running')
 
+        self.StackedWidget_dock.setVisible(False)
+
         # connect signals and slots
         self.poligonize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(polygonizewidget))
         self.poligonize.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Polygonize'))
@@ -162,12 +173,18 @@ class object_classifier_app (QMainWindow):
         confusionmatrixwidget.done.connect(lambda: self.StackedWidget.setCurrentWidget(confusionmatrixwidget.resultsgroup))
         self.supervised.triggered.connect(lambda: self.StackedWidget_dock.setWindowTitle('Supervised classification'))
         self.supervised.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
+        self.supervised.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
+        self.poligonize.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
+        self.rasterize.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
+        self.confusiomatrix.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
         self.supervised_classification.step1next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
         self.supervised_classification.step2back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
         self.supervised_classification.step2next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step3))
         self.supervised_classification.step3back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
         self.loadprojectaction.triggered.connect(self.openproject)
-        self.saveprojectaction.triggered.connect(self.saveproject)
+        self.saveprojectasaction.triggered.connect(self.saveproject)
+        self.newprojectaction.triggered.connect(self.newproject)
+        self.saveaction.triggered.connect(self.save)
 
 
     def zoomIn(self):
@@ -183,15 +200,16 @@ class object_classifier_app (QMainWindow):
         self.canvas.setMapTool(self.toolPan)
 
     def saveproject(self):
-        savedfile = QFileDialog.getSaveFileName(self, "Save project", ".", "(*.qgs)")[0] +'.qgs'
+        """save the project as..."""
+        savedfile = QFileDialog.getSaveFileName(self, "Save project", ".", "(*.qgs)")[0] + '.qgs'
         try:
             self.layerpanel.project.setFileName(savedfile)
             self.layerpanel.project.write()
         except:
             pass
 
-
     def openproject(self):
+        """open a dialog ro select a project file to open"""
         file = QFileDialog.getOpenFileName(self, "Open project", ".", "(*.qgs)")[0]
         fileinfo = QFileInfo(file)
         projectfile = fileinfo.filePath()
@@ -201,8 +219,18 @@ class object_classifier_app (QMainWindow):
         except:
             pass
 
+    def newproject(self):
+        """create a new empty project"""
+        self.layerpanel.project.clear()
 
-
+    def save(self):
+        """save the changes in the project, if the project is not associated with a project file, a dialog for
+        creating a project will open"""
+        write = self.layerpanel.project.write()
+        if write is True:
+            pass
+        else:
+            self.saveproject()
 
     def main(argv):
         """runing thr appplication"""
