@@ -1,17 +1,13 @@
-from PyQt5.QtGui import QFont, QStandardItemModel, QDropEvent, QStandardItem
-from PyQt5.QtCore import Qt, pyqtSignal, QFileInfo,QProcess, QStringListModel, QThread, QObject, QRunnable, QThreadPool
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QGroupBox,\
-    QPushButton, QLineEdit, QWidget, QFrame, QLabel, QListWidget, QApplication, QFileSystemModel,QTreeView,\
-    QListView, QListWidgetItem, QAbstractItemView, QMenuBar, QAction, QMenu, QCheckBox, QListWidgetItem, QMessageBox,\
-    QCheckBox, QTreeWidget, QTreeWidgetItem, QGraphicsView, QFileDialog,QTextEdit, QProgressBar
-import sys
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import  pyqtSignal, QFileInfo
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout, QGroupBox,\
+     QLineEdit, QWidget, QLabel,QMessageBox,QTreeWidgetItem, QFileDialog
+
 from qgis.core import *
 from qgis.gui import *
-import gdal
 import os
 import ast
-import subprocess
-import threading as thr
+
 
 from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit, MyQProcess, bands_pairing2
 import fileinput

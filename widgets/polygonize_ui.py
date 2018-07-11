@@ -8,7 +8,7 @@ from qgis.gui import *
 from costum_widgets import  map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit, massagewidget, MyQProcess
 import ast
 
-sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets/tools')
+sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/classification_app_gui/widgets/tools')
 
 from polygonize import Polygonize
 

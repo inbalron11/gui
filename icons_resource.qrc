@@ -1,0 +1,14 @@
+<RCC>
+     <qresource prefix="/">
+       <file>icons/pan.png</file>
+       <file>icons/matrix.png</file>
+       <file>icons/newproject.png</file>
+       <file>icons/openproject.png</file>
+       <file>icons/polygon.png</file>
+       <file>icons/raster.png</file>
+       <file>icons/save.png</file>
+       <file>icons/saveas.png</file>
+       <file>icons/Zoom-In-icon.png</file>
+       <file>icons/Zoom-Out-icon.png</file>
+     </qresource>
+</RCC>

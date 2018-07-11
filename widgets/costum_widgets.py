@@ -1,9 +1,9 @@
-from PyQt5.QtGui import QFont, QStandardItemModel, QDropEvent, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, pyqtSignal, QFileInfo,QProcess
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox, QGroupBox,\
-    QPushButton, QLineEdit, QWidget, QFrame, QLabel, QListWidget, QApplication, QFileSystemModel,QTreeView,\
-    QListView, QListWidgetItem, QAbstractItemView, QMenuBar, QAction, QMenu, QCheckBox, QListWidgetItem, QMessageBox,\
-    QCheckBox, QTreeWidget, QTreeWidgetItem, QGraphicsView, QFileDialog,QTextEdit
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox,\
+    QPushButton, QLineEdit, QWidget, QLabel, QListWidget, QApplication, QFileSystemModel,QTreeView,\
+    QAbstractItemView, QMenu, QListWidgetItem,\
+    QTreeWidget, QTreeWidgetItem,QTextEdit
 import sys
 from qgis.core import *
 from qgis.gui import *

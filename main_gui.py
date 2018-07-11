@@ -7,20 +7,23 @@ from PyQt5.QtWidgets import QVBoxLayout, QMainWindow, QFileDialog, QApplication,
 from qgis.core import *
 from qgis.gui import *
 import sys
+import icons_resource
 
 
 # Import costume widgets
-sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/widgets')
+sys.path.append('./widgets')
 
-from costum_widgets import map_canvas, LayersPanel,filetree
+from costum_widgets import map_canvas, LayersPanel, filetree
 from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
 from confusinmatrix_ui import Confusion_matrix_ui
 
+
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
 qgis_prefix = '/opt/qgis/QGIS/build/output/'
+
 
 
 class object_classifier_app (QMainWindow):
@@ -55,16 +58,16 @@ class object_classifier_app (QMainWindow):
         actionZoomOut.setCheckable(True)
         actionPan.setCheckable(True)
 
-        actionPanPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Hands-Hand-icon.png')
-        actionZoomInPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-In-icon.png')
-        actionZoomOutPixmap = QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/Zoom-Out-icon.png')
-        actionsave = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/save.png'))
-        actionsaveas = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/saveas.jpg'))
-        actionnew = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/newproject.png'))
-        actionloadproject = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/openproject.png'))
-        actionpolygonize = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/polygon.png'))
-        actionrasterize = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/raster.png'))
-        actionconfusion = QIcon(QPixmap('/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/icons/matrix.png'))
+        actionPanPixmap = QIcon(QPixmap(':/icons/pan.png'))
+        actionZoomInPixmap = QIcon(QPixmap(':/icons/Zoom-In-icon.png'))
+        actionZoomOutPixmap = QPixmap(':/icons/Zoom-Out-icon.png')
+        actionsave = QIcon(QPixmap(':/icons/save.png'))
+        actionsaveas = QIcon(QPixmap(':/icons/saveas.png'))
+        actionnew = QIcon(QPixmap(':/icons/newproject.png'))
+        actionloadproject = QIcon(QPixmap(':/icons/openproject.png'))
+        actionpolygonize = QIcon(QPixmap(':/icons/polygon.png'))
+        actionrasterize = QIcon(QPixmap(':/icons/raster.png'))
+        actionconfusion = QIcon(QPixmap(':/icons/matrix.png'))
 
         actionZoomIn.setIcon(QIcon(actionZoomInPixmap))
         actionZoomOut.setIcon(QIcon(actionZoomOutPixmap))
