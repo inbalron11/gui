@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget, QMessageBox
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget
+from PyQt5.QtCore import QProcess
 import sys
 from qgis.core import *
 from qgis.gui import *
@@ -6,6 +7,7 @@ from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidge
 
 sys.path.append('./tools')
 from rasterize import Rasterize
+from costum_widgets import MyQProcess
 
 
 class Rasterize_ui(QWidget):
@@ -83,7 +85,7 @@ class Rasterize_ui(QWidget):
 
         self.rasterizebottun.clicked.connect(self.run)
 
-        self.massage = QMessageBox()
+        self.process = MyQProcess('Rasterizing...', 'Rasterize')
 
     def collect_users_input(self):
         if self.lables_file_group.isChecked():
@@ -109,21 +111,33 @@ class Rasterize_ui(QWidget):
         self.field_name_line.clear()
         self.lables_file_line.clear()
 
-    def load_results_to_canvas(self):
-
-        self.legendwidget.add_to_canvas([self.newraster])
+    def load_results_to_canvas(self,raster):
+        if self.process.process.exitStatus() == QProcess.NormalExit:
+            if self.process.process.exitCode() == 0:
+                self.process.label.setText('Done')
+                print('normal')
+                self.legendwidget.add_to_canvas([raster])
+                self.clear()
+            elif self.process.process.exitCode() == 1:
+                print('error ocurred')
+                self.process.label.setText('An error occured:\n'
+                                           '1.Check if some input is missing\n'
+                                           '2. Check that all the input paths are valid')
 
     def run(self):
-        shapefile_path_line = self.shapefile_path_line.text()
-        out_raster_path = self.out_raster_path_line.text()
-        reference_raster = self.reference_raster_line.text()
-        out_raster_name = self.out_raster_name_line.text()
-        field_name = self.field_name_line.text()
-        lables_file = self.lables_file_line.text()
+        shapefile_path_line = self.shapefile_path_line.text() + ' '
+        out_raster_path = self.out_raster_path_line.text() + ' '
+        reference_raster = self.reference_raster_line.text() + ' '
+        out_raster_name = self.out_raster_name_line.text() + ' '
+        field_name = self.field_name_line.text() + ' '
+        lables_file = 'None '
         self.newraster = out_raster_path + out_raster_name
+        if self.lables_file_group.isChecked():
+            lables_file = self.lables_file_line.text() + ' '
 
-        ras = Rasterize(shapefile_path_line, out_raster_path, reference_raster, out_raster_name= out_raster_name,
-                        field_name=field_name, lables_file=None)
-        self.massage.setText('Done')
-        self.massage.show()
-        self.clear()
+        cmd = 'python3 ./widgets/tools/rasterize.py ' + shapefile_path_line + out_raster_path + reference_raster + out_raster_name + field_name + lables_file
+        self.process.cmd = cmd
+        self.process.start_process2()
+        newraster = self.out_raster_path_line.text() + self.out_raster_name_line.text()
+        self.process.process.finished.connect(lambda: self.load_results_to_canvas(newraster))
+

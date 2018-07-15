@@ -1,14 +1,13 @@
 from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout,QGroupBox,QLineEdit,QWidget, QMessageBox, QFrame, QLabel
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal,QProcess
 from PyQt5.QtGui import QPixmap
 import sys
 from qgis.core import *
 from qgis.gui import *
 from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit
+from costum_widgets import MyQProcess
 
 sys.path.append('./tools')
-from confusion_matrix import Confusion_matrix
-
 
 class Confusion_matrix_ui(QWidget):
     done = pyqtSignal(name = 'done')
@@ -79,6 +78,7 @@ class Confusion_matrix_ui(QWidget):
         self.confusionbottun.clicked.connect(self.run)
 
         self.massage = QMessageBox()
+        self.process = MyQProcess('Computing matrix...', 'Confusion matrix')
 
     def clear(self):
         self.trueraster_path_line.clear()
@@ -86,20 +86,31 @@ class Confusion_matrix_ui(QWidget):
         self.outpath_line.clear()
 
     def run(self):
-        trueraster_path_line = self.trueraster_path_line.text()
-        predicted_raster_path_line = self.predicted_raster_path_line.text()
-        outpath_line = self.outpath_line.text()
-        self.con = Confusion_matrix(trueraster_path_line, predicted_raster_path_line, 10, outpath_line, False)
-        self.done.emit()
+        trueraster_path_line = self.trueraster_path_line.text() + ' '
+        predicted_raster_path_line = self.predicted_raster_path_line.text() + ' '
+        outpath_line = self.outpath_line.text() + ' '
 
-        pixmap = QPixmap(outpath_line + '/' + 'normalized_confusion_matrix')
-        self.label1.setPixmap(pixmap)
-
-
-        pixmap = QPixmap(outpath_line + '/'+ 'confusion_matrix')
-        self.label2.setPixmap(pixmap)
+        cmd = 'python3 ./widgets/tools/confusion_matrix.py ' + trueraster_path_line + predicted_raster_path_line + outpath_line
+        self.process.cmd = cmd
+        self.process.start_process2()
+        self.process.process.finished.connect(self.show_results)
 
 
-        self.massage.setText('Done')
-        self.massage.show()
-        self.clear()
+    def show_results(self):
+
+        if self.process.process.exitStatus() == QProcess.NormalExit:
+            if self.process.process.exitCode() == 0:
+                self.done.emit()
+                self.process.label.setText('Done')
+                pixmap = QPixmap(self.outpath_line.text() + '/' + 'normalized_confusion_matrix')
+                self.label1.setPixmap(pixmap)
+
+                pixmap = QPixmap(self.outpath_line.text() + '/' + 'confusion_matrix')
+                self.label2.setPixmap(pixmap)
+
+                self.clear()
+            elif self.process.process.exitCode() == 1:
+                print('error ocurred')
+                self.process.label.setText('An error occured:\n'
+                                           '1.Check if some input is missing\n'
+                                           '2. Check that all the input paths are valid')

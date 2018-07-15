@@ -1,10 +1,9 @@
-import sys
 import csv
-import getopt
 import numpy as np
 from osgeo import ogr
 from osgeo import gdal
 from osgeo import osr
+import sys
 
 
 class Polygonize:
@@ -151,29 +150,19 @@ class Polygonize:
 
         # write the array into a the new reclassified raster
         target_ds.GetRasterBand(1).WriteArray(raster_data)
-        print('DOne')
+        print('Done')
 
 
 if __name__ == '__main__':
 
-    opts, args = getopt.getopt(sys.argv[1:], 'rlon', ['raster=', 'labels_path=', 'out_shapefile=', 'layer_name='])
-    layer_name = 'thematic'
-    for opt, val in opts:
-        if (opt in ('-r', '--raster')):
-            raster_path = val
-        elif (opt in ('-l', '--labels_path')):
-            labels_path = val
-        elif (opt in ('-o', '--out_shapefile')):
-            out_shapefile = val
-        elif (opt in ('-n', '--layer_name')):
-            layer_name = val
-
-    Polygonize(raster_path = raster_path, labels_path = labels_path, shapefile_path=out_shapefile, layer_name=layer_name)
-
-    raster = '/home/inbal/data/metula/out_supervised2/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_2.5_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm_OV_0.5_gpu0__llkMap.tif'
-    shpfile = '/home/inbal/inbal/gdal/outputs/polygonize/'
-    lables = '/home/inbal/data/metula/out_supervised2/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_2.5_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm.lbl'
+    poly = Polygonize(raster_path=str(sys.argv[1]), labels_path=str(sys.argv[2]),shapefile_path=str(sys.argv[3]),
+                      layer_name=str(sys.argv[4]),class_name=str(sys.argv[5]),
+                      idfield=str(sys.argv[6]),labels_list=str(sys.argv[7]))
+    poly.polygonize()
 
 
-    poly2 = Polygonize(raster_path=raster, labels_path=lables, shapefile_path=shpfile, layer_name= 'byclass')
-    poly2.create_filtered_shapefile(2)
+
+
+
+
+

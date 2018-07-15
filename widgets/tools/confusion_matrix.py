@@ -5,6 +5,7 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import itertools
 import multiprocessing as multi
+import sys
 
 
 class Confusion_matrix:
@@ -121,11 +122,12 @@ class Confusion_matrix:
 
 if __name__ == '__main__':
 
-    trueras = '/home/inbal/data/metula/out_supervised2/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_2.5_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm_OV_0.5_gpu0__llkMap.tif'
-    predras = '/home/inbal/inbal/gdal/outputs/rasterize/outputsmetulapred'
-    exppath = '/home/inbal/inbal/gdal/outputs/rasterize'
+    trueras = str(sys.argv[1])
+    predras = str(sys.argv[2])
+    exppath = str(sys.argv[3])
 
-    con = Confusion_matrix(trueras, predras, 10, exppath, False)
+    con = Confusion_matrix(true_raster_path= trueras, predicted_raster_path= predras, numpprocesses=10,
+                           outpath=exppath, show=False)
 
 
 

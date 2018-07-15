@@ -8,13 +8,10 @@ from qgis.gui import *
 from costum_widgets import  map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit, massagewidget, MyQProcess
 import ast
 
-sys.path.append('/home/inbal/inbal/qgis_programing/standaloneapp/classification_app_gui/widgets/tools')
-
-from polygonize import Polygonize
-
+sys.path.append('./widgets/tools')
 
 class Polygonize_ui(QWidget):
-    running = pyqtSignal(name= 'running')
+    running = pyqtSignal(name='running')
     def __init__(self):
         super().__init__()
         """this is a widget for poligonizing a raster"""
@@ -108,33 +105,30 @@ class Polygonize_ui(QWidget):
         self.legendwidget = None
 
         # massage when done running:
-        self.massage = QMessageBox(text='Done')
-
+        self.process = MyQProcess('Polygonizing...pleas wait', 'Polygonize')
 
     def collect_users_input(self):
 
         """collect the input from all widgets and init the poliginize object with costume labels
         or with the selected labels file"""
         #self.show_massage()
-        rasterpath = self.raster_path_line.text()
-        labels = self.labels_path.text()
-        shapefile_path = self.shapefile_path.text()
-        layer_name = self.layer_name.text()
-        class_name = self.class_name.text()
-        idfield = self.idfield.text()
+        rasterpath = self.raster_path_line.text()+' '
+        labels = self.labels_path.text()+' '
+        shapefile_path = self.shapefile_path.text()+' '
+        layer_name = self.layer_name.text()+' '
+        class_name = self.class_name.text()+' '
+        idfield = self.idfield.text() +' '
+        lstcostumelabels = 'None '
 
         if self.costumelabels_group.isChecked():
             costumelabels = '[' + self.costumelabels.text() + ']'
             lstcostumelabels = ast.literal_eval(costumelabels)
+            labels = 'None '
 
-            poly = Polygonize(raster_path=rasterpath, labels_list= lstcostumelabels , shapefile_path=shapefile_path,
-                                   layer_name=layer_name, class_name=class_name, idfield=idfield)
-            return poly
+        argsdict = {'rasterpath' :rasterpath,'labels': labels, 'shapefile_path': shapefile_path, 'layer_name':layer_name,
+                    'class_name':class_name,'idfield':idfield,'lstcostumelabels':lstcostumelabels,'layerfullpath': self.shapefile_path.text()+self.layer_name.text()+'.shp'}
 
-        else:
-            poly = Polygonize(raster_path=rasterpath, labels_path=labels, shapefile_path=shapefile_path,
-                                   layer_name=layer_name, class_name=class_name, idfield=idfield)
-            return poly
+        return argsdict
 
     def clear(self):
         """clear the text from all widgets"""
@@ -149,12 +143,29 @@ class Polygonize_ui(QWidget):
     def run(self):
         """start polygonizing when 'polygonize' button is clicked"""
 
-        poly = self.collect_users_input()
-        poly.polygonize()
-        newlayer = poly.output_shp + poly.layer_name + '.shp'
-        self.massage.show()
-        self.legendwidget.add_to_canvas([newlayer])
-        self.clear()
+        argsdict = self.collect_users_input()
+        cmd = 'python3 ./widgets/tools/polygonize.py ' + argsdict['rasterpath']+  argsdict['labels']+  argsdict['shapefile_path']+ argsdict['layer_name'] + argsdict['class_name'] + argsdict['idfield'] +argsdict['lstcostumelabels']
+        self.process.cmd = cmd
+        self.process.start_process2()
+        newlayer= argsdict['layerfullpath']
+        #self.process.process.finished.connect(lambda: self.legendwidget.add_to_canvas([newlayer]))
+        self.process.process.finished.connect(lambda: self.load_results(newlayer))
+
+
+    def load_results(self,layer):
+        if self.process.process.exitStatus() == QProcess.NormalExit:
+            if self.process.process.exitCode() == 0:
+                self.process.label.setText('Done')
+                print('normal')
+                self.legendwidget.add_to_canvas([layer])
+                self.clear()
+            elif self.process.process.exitCode() == 1:
+                print('error ocurred')
+                self.process.label.setText('An error occured:\n'
+                                           '1.Check if the file name you chose alredy exist in the folder\n'
+                                           '2.Check if some input is missing\n'
+                                           '3. Check that all the input paths are valid')
+
 
 
 

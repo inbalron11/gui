@@ -419,9 +419,8 @@ class MyQProcess(QWidget):
         self.layout = QVBoxLayout()
         self.stoppush = QPushButton('Stop')
         self.edit = QTextEdit()
+        self.label =QLabel()
         self.edit.setStyleSheet('font-size:12pt')
-        self.layout.addWidget(self.edit)
-        self.layout.addWidget(self.stoppush)
         self.setLayout(self.layout)
         self.cmd = None
         self.setGeometry(100,100, 800, 300)
@@ -429,6 +428,7 @@ class MyQProcess(QWidget):
         self.setMaximumWidth(800)
         self.setWindowTitle(title)
         self.edit.setText(text)
+        self.label.setText(text)
         #self.show()
 
         # Add the process and start it
@@ -443,7 +443,22 @@ class MyQProcess(QWidget):
         # Connect the signal readyReadStandardOutput to the slot of the widget
         self.process.readyReadStandardOutput.connect(self.readStdOutput)
 
+    def start_process2(self):
+        """start the process with a poping Qlabel massage (used for: polygonize,rasterize,confusion matrix"""
+        self.setGeometry(100, 100, 400, 300)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.stoppush)
+        # Show the widget
+        self.show()
+        # print('starting process')
+        self.process.start(self.cmd)
+        # print('started')
+
+
     def start_process(self):
+        """start the process with a poping Qedit that shows all the input (used for classification running"""
+        self.layout.addWidget(self.edit)
+        self.layout.addWidget(self.stoppush)
         # Show the widget
         self.show()
         # print('starting process')
@@ -461,7 +476,7 @@ class MyQProcess(QWidget):
     def kill(self):
         print('killing process')
         self.process.terminate()
-        self.edit.close()
+        self.close()
 
 
     def readStdOutput(self):

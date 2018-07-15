@@ -289,6 +289,7 @@ class supervised_classification_ui(QWidget):
         self.objectresolutionlineedit.setText(str(objectresolution))
 
     def check_parameters(self):
+        """checks if all the needed parameters were given by the user"""
         inputlist = self.supervised_classification_input()[1]
 
         for i in inputlist:
@@ -308,7 +309,7 @@ class supervised_classification_ui(QWidget):
             strinput = str(input)
 
             # create the classification script with the users input
-            copyclassificationscript = "cp " + "'/home/inbal/inbal/qgis_programing/standaloneapp/clssification_app_gui/supervised_classification.py' " \
+            copyclassificationscript = "cp " + "'.tools/supervised_classification.py' " \
                                        + "'" + input['outpath'] + "'"
             os.system(copyclassificationscript)
             openinput = "input_dict =" + strinput

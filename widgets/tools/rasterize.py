@@ -1,5 +1,6 @@
 from osgeo import gdal, ogr
 import csv
+import sys
 
 
 class Rasterize:
@@ -86,9 +87,16 @@ class Rasterize:
 
 
 if __name__ == '__main__':
-    shapepath = '/home/inbal/inbal/qgis_programing/standaloneapp/apptrials/thematic.shp'
-    outpath = '/home/inbal/inbal/qgis_programing/standaloneapp/apptrials/'
-    reference = '/home/inbal/inbal/gdal/outputs/rasterize/B_00_01_02_03_FB_00_01_02_03_11_12_33_OR_5.0_CS2.5_20.0_OC_1.0_8.0_CL_32_TF_6_scl_svm__model.svm_OV_0.5_gpu0__llkMap.tif'
 
-    ras = Rasterize(shapepath, outpath, reference, out_raster_name='metulapred.tif')
+    shapepath = str(sys.argv[1])
+    outpath = str(sys.argv[2])
+    reference = str(sys.argv[3])
+    out_raster_name = str(sys.argv[4])
+    fieldname = str(sys.argv[5])
+    labelsfile = str(sys.argv[6])
+    if labelsfile  == 'None':
+        labelsfile = None
+
+    ras = Rasterize(shapefile_path=shapepath, out_raster_path=outpath, reference_raster=reference,
+                    out_raster_name=out_raster_name,field_name=fieldname)
 
