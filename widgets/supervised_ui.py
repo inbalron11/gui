@@ -82,9 +82,6 @@ class supervised_classification_ui(QWidget):
 
         # group 6
         self.featurebands = QGroupBox()
-        #self.featurebands.setCheckable(True)
-        #self.featurebands.setChecked(False)
-        #self.featurebands.toggled.connect(self.set_fixed_bands)
         self.featurebands.setTitle("Feature bands")
 
         featurebandslayout = QVBoxLayout()
@@ -231,10 +228,10 @@ class supervised_classification_ui(QWidget):
                      minocurencedistance,maxocurencedistance,ovelrlapratio,objectresolution, feturebandspairs]
 
         inputdict = {'dataset': dataset, 'bands': bands, 'featurebands': featurebands, 'trainingset': trainingset,
-                      'roi': roi, 'outpath': outpath, 'classname': classname, 'mincellsize': float(mincellsize),
-                      'maxcellsize': float(maxcellsize), 'minocurencedistance': float(minocurencedistance),
-                      'maxocurencedistance': float(maxocurencedistance),
-                      'ovelrlapratio': float(ovelrlapratio), 'objectresolution': float(objectresolution),
+                      'roi': roi, 'outpath': outpath, 'classname': classname, 'mincellsize': mincellsize,
+                      'maxcellsize': maxcellsize, 'minocurencedistance': minocurencedistance,
+                      'maxocurencedistance': maxocurencedistance,
+                      'ovelrlapratio': ovelrlapratio, 'objectresolution': objectresolution,
                       'feturebandspairs': feturebandspairs}
 
         return [inputdict,inputlist]
@@ -302,25 +299,13 @@ class supervised_classification_ui(QWidget):
 
     def run_supervised_classification(self):
         """run the classification when 'classify' bottun is pressed"""
+
+        inputdict = self.supervised_classification_input()[0]
         self.running.emit()
-        input = self.supervised_classification_input()[0]
         parameters = self.check_parameters()
         if parameters == True:
-            strinput = str(input)
-
-            # create the classification script with the users input
-            copyclassificationscript = "cp " + "'.tools/supervised_classification.py' " \
-                                       + "'" + input['outpath'] + "'"
-            os.system(copyclassificationscript)
-            openinput = "input_dict =" + strinput
-
-            for line in fileinput.input(input['outpath'] + 'supervised_classification.py', inplace=True):
-                print(line.rstrip().replace('#open input', openinput))
-
-            cmd = 'python3 ' + input['outpath'] + 'supervised_classification.py'
-            print(cmd)
-            # self.process.cmd = 'python3 /home/inbal/inbal/qgis_programing/standaloneapp/apptrials/metula_supervised.py'
-            self.process.cmd = cmd
+            strinput = str(inputdict)
+            self.process.cmd = 'python3 ./widgets/tools/supervised_classification.py ' +'"' +strinput +'"'
             self.process.start_process()
         else:
             massage = QMessageBox(self)

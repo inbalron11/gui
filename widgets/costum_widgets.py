@@ -429,6 +429,7 @@ class MyQProcess(QWidget):
         self.setWindowTitle(title)
         self.edit.setText(text)
         self.label.setText(text)
+        self.args =None
         #self.show()
 
         # Add the process and start it
@@ -449,10 +450,10 @@ class MyQProcess(QWidget):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.stoppush)
         # Show the widget
-        self.show()
         # print('starting process')
         self.process.start(self.cmd)
         # print('started')
+        self.show()
 
 
     def start_process(self):
@@ -468,14 +469,20 @@ class MyQProcess(QWidget):
     def __del__(self):
         # If QApplication is closed attempt to kill the process
         self.process.terminate()
+        self.edit.clear()
+        self.label.clear()
         # Wait for Xms and then elevate the situation to terminate
         if not self.process.waitForFinished(10000):
             print('killing process')
             self.process.kill()
+            self.edit.clear()
+            self.label.clear()
 
     def kill(self):
         print('killing process')
         self.process.terminate()
+        self.edit.clear()
+        self.label.clear()
         self.close()
 
 
