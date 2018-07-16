@@ -10,7 +10,7 @@ import ast
 
 
 from costum_widgets import map_canvas, LayersPanel, datatreeview, inputlistwidget, lineedit, MyQProcess, bands_pairing2
-import fileinput
+
 
 
 class supervised_classification_ui(QWidget):

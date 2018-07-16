@@ -9,7 +9,6 @@ from qgis.gui import *
 import sys
 import icons_resource
 
-
 # Import costume widgets
 sys.path.append('./widgets')
 
@@ -18,13 +17,12 @@ from supervised_ui import supervised_classification_ui
 from polygonize_ui import Polygonize_ui
 from rasterize_ui import Rasterize_ui
 from confusinmatrix_ui import Confusion_matrix_ui
-
+sys.path.append('./widgets/tools')
+from create_training_set import PolyMapTool,create_training_set
 
 # Environment variable qgis_prefix must be set to the install directory
 # before running the application
 qgis_prefix = '/opt/qgis/QGIS/build/output/'
-
-
 
 class object_classifier_app (QMainWindow):
     def __init__(self):
@@ -105,16 +103,18 @@ class object_classifier_app (QMainWindow):
         classificationmenue = self.menuebar.addMenu('Classification')
         toolsmenue = self.menuebar.addMenu('Tools')
         self.supervised = QAction('supervised')
+        self.training = QAction("Training set", self)
         self.unsupervised = QAction('unsupernised')
-        self.poligonize = QAction(actionpolygonize,'Polygonize')
-        self.rasterize = QAction(actionrasterize,'Rasterize')
-        self.confusiomatrix = QAction(actionconfusion,'Confusionmatrix')
-        self.newprojectaction = QAction(actionnew,'New project')
-        self.loadprojectaction = QAction(actionloadproject,'Load project')
-        self.saveprojectasaction = QAction(actionsaveas,'Save project as')
-        self.saveaction = QAction(actionsave,'Save')
+        self.poligonize = QAction(actionpolygonize, 'Polygonize')
+        self.rasterize = QAction(actionrasterize, 'Rasterize')
+        self.confusiomatrix = QAction(actionconfusion, 'Confusionmatrix')
+        self.newprojectaction = QAction(actionnew, 'New project')
+        self.loadprojectaction = QAction(actionloadproject, 'Load project')
+        self.saveprojectasaction = QAction(actionsaveas, 'Save project as')
+        self.saveaction = QAction(actionsave, 'Save')
         classificationmenue.addAction(self.supervised)
         classificationmenue.addAction(self.unsupervised)
+        classificationmenue.addAction(self.training)
         toolsmenue.addAction(self.poligonize)
         toolsmenue.addAction(self.rasterize)
         toolsmenue.addAction(self.confusiomatrix)
@@ -135,17 +135,18 @@ class object_classifier_app (QMainWindow):
         #set the supervised classification window widget
         self.supervised_classification = supervised_classification_ui()
         self.StackedWidget = QStackedWidget()
+
         self.StackedWidget.addWidget(self.supervised_classification.step1)
         self.StackedWidget.addWidget(self.supervised_classification.step2)
         self.StackedWidget.addWidget(self.supervised_classification.step3)
         self.StackedWidget.setCurrentWidget(self.supervised_classification.step1)
-        self.StackedWidget_dock = QDockWidget('classification',self)
+        self.StackedWidget_dock = QDockWidget('classification', self)
         self.StackedWidget_dock.setWidget(self.StackedWidget)
         self.addDockWidget(Qt.RightDockWidgetArea, self.StackedWidget_dock)
 
         # set the unsupervised classification window widget
 
-        #set polygonize widget
+        # set polygonize widget
         polygonizewidget = Polygonize_ui()
         polygonizewidget.legendwidget = self.layerpanel
         self.StackedWidget.addWidget(polygonizewidget)
@@ -163,8 +164,11 @@ class object_classifier_app (QMainWindow):
 
         self.threadpool = QThreadPool()
         self.massage = QMessageBox(text='Running')
-
         self.StackedWidget_dock.setVisible(False)
+
+        # set the widget for creating training set
+        self.trainniwidget = create_training_set(self.canvas)
+        self.StackedWidget.addWidget(self.trainniwidget)
 
         # connect signals and slots
         self.poligonize.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(polygonizewidget))
@@ -180,6 +184,9 @@ class object_classifier_app (QMainWindow):
         self.poligonize.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
         self.rasterize.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
         self.confusiomatrix.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
+        self.training.triggered.connect(lambda: self.StackedWidget_dock.setVisible(True))
+        self.training.triggered.connect(lambda: self.StackedWidget.setCurrentWidget(self.trainniwidget))
+        self.training.triggered.connect(lambda: self.trainniwidget.create_layer())
         self.supervised_classification.step1next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step2))
         self.supervised_classification.step2back.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step1))
         self.supervised_classification.step2next.clicked.connect(lambda: self.StackedWidget.setCurrentWidget(self.supervised_classification.step3))
@@ -188,7 +195,6 @@ class object_classifier_app (QMainWindow):
         self.saveprojectasaction.triggered.connect(self.saveproject)
         self.newprojectaction.triggered.connect(self.newproject)
         self.saveaction.triggered.connect(self.save)
-
 
     def zoomIn(self):
         """canvas zoom in tool"""
